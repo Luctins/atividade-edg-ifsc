@@ -1,6 +1,6 @@
 /**
   -----------------------------------------------------------------------------
-  @author Lucas Martins Mendes
+  @author Lucas Martins Mendes,  Matheus Reibnitz Willemann
   @file   LCD.h
   @date   04/30/20
   @brief Adaptado do Material do professor Valdir Noll,

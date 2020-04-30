@@ -1,6 +1,6 @@
 /**
   -----------------------------------------------------------------------------
-  @author Lucas Martins Mendes
+  @author Lucas Martins Mendes, Matheus Reibnitz Willemann
   @file   LCD.c
   @date   04/30/20
 
