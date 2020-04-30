@@ -4,13 +4,20 @@
 # is public domain), believed to be neutral to any flavor of "make"
 # (GNU make, BSD make, SysV make)
 
+##############################################3
+# Parameters
 
 MCU = atmega328
 FORMAT = ihex
-TARGET = main
-SRC = $(TARGET).c
-ASRC =
-OPT = s
+TARGET = atividade-teclado
+SRC = $(wildcard src/*.c)
+ASRC = $(wildcard src/*.s)
+OPT =
+BDIR := build
+SRCDIR = src
+
+# Define all object files.
+OBJ := $(foreach f, $(SRC), build/$(notdir $(f:.c=.o))) #$(ASRC:.S=.o)
 
 # Name of this Makefile (used for "make depend").
 MAKEFILE = Makefile
@@ -28,10 +35,11 @@ DEBUG = stabs
 CSTANDARD = -std=gnu99
 
 # Place -D or -U options here
-CDEFS =
+CDEFS = -DF_CPU=16000000UL
 
 # Place -I options here
-CINCS =
+CINCS = -I./inc/
+
 
 
 CDEBUG = -g$(DEBUG)
@@ -39,7 +47,6 @@ CWARN = -Wall -Wstrict-prototypes
 CTUNING = -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 #CEXTRA = -Wa,-adhlns=$(<:.c=.lst)
 CFLAGS = $(CDEBUG) $(CDEFS) $(CINCS) -O$(OPT) $(CWARN) $(CSTANDARD) $(CEXTRA)
-
 
 #ASFLAGS = -Wa,-adhlns=$(<:.S=.lst),-gstabs
 
@@ -116,8 +123,6 @@ AVRDUDE = avrdude
 REMOVE = rm -f
 MV = mv -f
 
-# Define all object files.
-OBJ = $(SRC:.c=.o) $(ASRC:.S=.o)
 
 # Define all listing files.
 LST = $(ASRC:.S=.lst) $(SRC:.c=.lst)
@@ -127,24 +132,24 @@ LST = $(ASRC:.S=.lst) $(SRC:.c=.lst)
 ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS)
 ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
+##################################################
+# Targets
 
 # Default target.
 all: build
 
 build: elf hex eep
 
-elf: $(TARGET).elf
-hex: $(TARGET).hex
-eep: $(TARGET).eep
-lss: $(TARGET).lss
-sym: $(TARGET).sym
+elf: $(BDIR)/$(TARGET).elf
+hex: $(BDIR)/$(TARGET).hex
+eep: $(BDIR)/$(TARGET).eep
+lss: $(BDIR)/$(TARGET).lss
+sym: $(BDIR)/$(TARGET).sym
 
 
 # Program the device.
 program: $(TARGET).hex $(TARGET).eep
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
-
-
 
 
 # Convert ELF to COFF for use in debugging / simulating in AVR Studio or VMLAB.
@@ -183,31 +188,25 @@ extcoff: $(TARGET).elf
 
 
 # Link: create ELF output file from object files.
-$(TARGET).elf: $(OBJ)
+$(BDIR)/$(TARGET).elf: $(OBJ)
 	$(CC) $(ALL_CFLAGS) $(OBJ) --output $@ $(LDFLAGS)
 
-
 # Compile: create object files from C source files.
-.c.o:
-	$(CC) -c $(ALL_CFLAGS) $< -o $@
+$(OBJ):
+	$(CC) -c $(ALL_CFLAGS) $(SRCDIR)/$(notdir $(@:.o=.c)) -o $@
 
-
-# Compile: create assembler files from C source files.
-.c.s:
-	$(CC) -S $(ALL_CFLAGS) $< -o $@
+#Compile: create assembler files from C source files.
+#.c.s:
+#	$(CC) -S $(ALL_CFLAGS) $< -o $@
 
 
 # Assemble: create object files from assembler source files.
-.S.o:
-	$(CC) -c $(ALL_ASFLAGS) $< -o $@
-
-
+#.S.o:
+#	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
 # Target: clean project.
 clean:
-	$(REMOVE) $(TARGET).hex $(TARGET).eep $(TARGET).cof $(TARGET).elf \
-	$(TARGET).map $(TARGET).sym $(TARGET).lss \
-	$(OBJ) $(LST) $(SRC:.c=.s) $(SRC:.c=.d)
+	$(REMOVE) $(foreach ext, hex eep lss cof elf map sym, $(BDIR)/$(TARGET).$(ext)) $(OBJ)
 
 depend:
 	if grep '^# DO NOT DELETE' $(MAKEFILE) >/dev/null; \
@@ -220,4 +219,8 @@ depend:
 		>> $(MAKEFILE); \
 	$(CC) -M -mmcu=$(MCU) $(CDEFS) $(CINCS) $(SRC) $(ASRC) >> $(MAKEFILE)
 
-.PHONY:	all build elf hex eep lss sym program coff extcoff clean depend
+
+print:
+	@echo "obj: $(OBJ)"
+
+.PHONY:	print all build elf hex eep lss sym program coff extcoff clean depend
