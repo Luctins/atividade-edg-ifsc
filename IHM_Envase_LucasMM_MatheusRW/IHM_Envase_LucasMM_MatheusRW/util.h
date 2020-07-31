@@ -54,8 +54,8 @@
 
 /*--------- Register Macros ---------*/
 
-#define set_mask(reg, mask, offset)	(reg |= (mask << offset))
-#define clr_mask(reg, mask, offset)	(reg &= ~(mask << offset)) /*!< '~' is Bitwise not */
+//#define set_mask(reg, mask, offset)	(reg |= (mask << offset))
+//#define clr_mask(reg, mask, offset)	(reg &= ~(mask << offset)) /*!< '~' is Bitwise not */
 
 
 #endif /* __UTIL_H__ */

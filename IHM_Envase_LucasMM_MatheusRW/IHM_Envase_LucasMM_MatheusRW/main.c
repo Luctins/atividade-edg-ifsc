@@ -22,6 +22,7 @@
    @brief  Atividade desenvolvida para a disciplina de Eletrônica Digital 2
 
    @see https://mil.ufl.edu/3744/docs/lcdmanual/commands.html
+   @see https://www.sparkfun.com/datasheets/LCD/HD44780.pdf
    ----------------------------------------------------------------------------
 */
 
@@ -42,17 +43,13 @@
 
 /*--------- Macros ---------*/
 
-
 /*--------- Constants ---------*/
 
 /*--- pins ---*/
-#define CYL_A PORTD,2
-#define CYL_B PORTD,3
+#define CYL_A PORTC,3
+#define CYL_B PORTC,4
 #define CYL_C PORTC,5
 
-/*emergency stop button and interrupt*/
-#define E_STOP_INTR PCINT12_vect
-#define E_STOP      PINC,4
 
 #define A_O PINB,0
 #define A_1 PINB,1
@@ -63,45 +60,115 @@
 
 #define SNS_CX PINB,6
 
+/*--- Buttons ---*/
+
 #define UP_BTN PINB,7
 #define DWN_BTN PINC,0
 #define ENTR_BTN PINC,1
+
+/*emergency stop button and interrupt*/
+#define E_STOP_INTR  INT0_vect
+#define E_STOP_BTN   PIND,2
+
 #define STRT_STOP_BTN PINC,2
-#define PAUSE_BTN PINC,3
+
+#define PAUSE_BTN PIND,3
+#define PAUSE_INT INT1_vect
 
 
 /*--------- predeclaration ---------*/
-typedef enum machineState
-{
-    IDLE = 0
+typedef enum machineState {
+    START = 0,
+    CONFIG,
+    READY,
+    RUN,
+    PAUSE,
+    ERROR
 } machineState_t;
 
+typedef enum runState {
+    WAITING = 0, /*!< esperando caixas */
+    DETECTED,    /*!< caixa detectada */
+    LOADING,     /*!< despejando material */
+    RELEASING,   /*!< libera caixa e recarrega compartimento interno */
+} runState_t;
+
 /*--------- Globals ---------*/
-void setup(void);
+
+volatile machineState_t major_state = START;
+volatile runState_t run_state = WAITING;
 
 /*--------- Main ---------*/
-int main(void)
+void main(void)
 {
-    //TODO: config reg interrupção
+    //configure interrupts
+    EICRA |= 0b00001010; //set INT0 and INT1 as falling edge
 
-    lcd_4bit_init();
-    lcd_write("hello, World!");
+    //set up pin directions
+    DDRB = 0x00;
+    DDRB = 0b00111000;
+    DDRD |= 0b00001100;
+
+    sei();
+
+    lcd_4bit_init();//will configure it's own pins
+
+    lcd_write("Hello there!");
 
   while(1)
     {
+        switch(major_state)
+        {
+        case START:
+            //TODO: chech initial state
+            break;
+        case CONFIG:
+            //TODO: run user config
+        break;
+        case READY:
 
+            break;
+        case RUN:
+            switch(run_state)
+            {
+            case WAITING:
+                break;
+            case DETECTED:
+
+                break;
+            case LOADING:
+
+                break;
+            case RELEASING:
+
+                break;
+            }
+            break;
+        case PAUSE:
+
+            break;
+        default:
+        case ERROR:
+
+        break;
+        }
     }
 }
 
 /*--------- Interrupts ---------*/
 ISR(E_STOP_INTR) //Emergency stop button ISR
 {
-	//[set state as emergency] goes here
-	//set_bit(CYL_B);
-	//set_bit(CYL_C);
-	//rst_bit(CYL_A);
+   major_state = ERROR;
+	set_bit(CYL_B);
+	set_bit(CYL_C);
+	rst_bit(CYL_A);
+   while(!get_bit(E_STOP_BTN)); //lock the machine while the emergency button is pressed
 }
-
+ISR(PAUSE_INT)
+{
+    major_state = (major_state == RUN ? PAUSE : (major_state ==  PAUSE ? RUN : major_state));
+    _delay_ms(10); //button debounce
+}
 /*--------- Function definition ---------*/
 
 /*--------- EOF ---------*/
