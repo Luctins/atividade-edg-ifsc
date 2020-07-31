@@ -28,6 +28,7 @@
 /*--------- Includes ---------*/
 
 #include <avr/io.h>
+
 #define F_CPU  16000000UL
 #include <util/delay.h>
 #include <avr/pgmspace.h>
@@ -35,11 +36,9 @@
 #include <stdint.h>
 
 #define USE_ASM_MACRO 1
-
 #include "util.h"
 
 #include "lcd.h"
-
 
 /*--------- Macros ---------*/
 
@@ -71,8 +70,11 @@
 #define PAUSE_BTN PINC,3
 
 
-/*--------- Function predeclaration ---------*/
-
+/*--------- predeclaration ---------*/
+typedef enum machineState
+{
+    IDLE = 0
+} machineState_t;
 
 /*--------- Globals ---------*/
 void setup(void);
@@ -80,6 +82,8 @@ void setup(void);
 /*--------- Main ---------*/
 int main(void)
 {
+    //TODO: config reg interrupção
+
     lcd_4bit_init();
     lcd_write("hello, World!");
 
@@ -93,9 +97,9 @@ int main(void)
 ISR(E_STOP_INTR) //Emergency stop button ISR
 {
 	//[set state as emergency] goes here
-	set_bit(CYL_B);
-	set_bit(CYL_C);
-	rst_bit(CYL_A);
+	//set_bit(CYL_B);
+	//set_bit(CYL_C);
+	//rst_bit(CYL_A);
 }
 
 /*--------- Function definition ---------*/
