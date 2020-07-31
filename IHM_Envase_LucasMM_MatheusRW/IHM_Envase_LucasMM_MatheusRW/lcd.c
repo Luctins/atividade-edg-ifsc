@@ -46,17 +46,12 @@
  */
 void lcd_4bit_init(void)
 {
-   //configure pins
-  LCD_DDR |= LCD_DATA_MASK;
+
+  /* wait for VCC to stabilize */
+	_delay_ms(20);
 
   rst_bit(LCD_RS); // indica instrução
   rst_bit(LCD_EN); // enable em 0
-
-  /**
-     tempo para estabilizar a tensão do LCD, após VCC ultrapassar 4.5 V
-     (na prática pode ser maior).
-  */
-	_delay_ms(20);
 
 
   //habilitação respeitando os tempos de resposta do LCD
@@ -86,20 +81,21 @@ void lcd_4bit_init(void)
 void lcd_cmd(unsigned char c /*!< command to send */)
 {
     rst_bit(LCD_RS);
-    /*send first nibble of data*/
+    /*send first nibble (high half) of data*/
 #if USE_LOWER_NIBLE
-    LCD_PORT = (LCD_PORT & 0xf0) | ( 0x0f & c);
+    LCD_PORT |= (c & 0xf0) >> 4;
 #else
-    LCD_PORT = (LCD_PORT & 0x0f) | ( 0xf0 & c);
+    LCD_PORT |= (c & 0xf0);
 #endif
     enable_pulse();
 
-    /*send second nibble of data*/
+    /*send second (lower) nibble of data*/
 #if USE_LOWER_NIBLE
-    LCD_PORT = (LCD_PORT & 0xf0) | ( 0x0f & (c << 4));
+    LCD_PORT |= (c & 0x0f);
 #else
-    LCD_PORT = (LCD_PORT & 0x0f) | ( 0xf0 & (c << 4));
+    LCD_PORT |= (c & 0x0f) << 4;
 #endif
+    enable_pulse();
 
     //se for instrução de retorno ou limpeza espera LCD estar pronto
     if(c<4)
@@ -113,18 +109,19 @@ void lcd_send_char(const char c)
     set_bit(LCD_RS);
 
 #if USE_LOWER_NIBLE
-    LCD_PORT = (LCD_PORT & 0xf0) | ( 0x0f & c);
+    LCD_PORT |= (c & 0xf0) >> 4;
 #else
-    LCD_PORT = (LCD_PORT & 0x0f) | ( 0xf0 & c);
+    LCD_PORT |= (c & 0xf0);
 #endif
     enable_pulse();
 
-    /*send second nibble of data*/
+    /*send second (lower) nibble of data*/
 #if USE_LOWER_NIBLE
-    LCD_PORT = (LCD_PORT & 0xf0) | ( 0x0f & (c << 4));
+    LCD_PORT |= (c & 0x0f);
 #else
-    LCD_PORT = (LCD_PORT & 0x0f) | ( 0xf0 & (c << 4));
+    LCD_PORT |= (c & 0x0f) << 4;
 #endif
+    enable_pulse();
 
 }
 /**

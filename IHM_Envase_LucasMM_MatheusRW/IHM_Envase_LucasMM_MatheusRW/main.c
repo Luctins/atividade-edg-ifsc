@@ -99,15 +99,15 @@ volatile machineState_t major_state = START;
 volatile runState_t run_state = WAITING;
 
 /*--------- Main ---------*/
-void main(void)
+int main(void)
 {
     //configure interrupts
     EICRA |= 0b00001010; //set INT0 and INT1 as falling edge
 
     //set up pin directions
     DDRB = 0x00;
-    DDRB = 0b00111000;
-    DDRD |= 0b00001100;
+    DDRC = 0b00111000;
+    DDRD = 0b11110011;
 
     sei();
 
