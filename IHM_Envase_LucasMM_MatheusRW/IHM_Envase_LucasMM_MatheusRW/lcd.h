@@ -37,7 +37,7 @@
 
 /*--- Constants ---*/
 
-#define USE_LOWER_NIBLE 1
+#define USE_LOWER_NIBLE 0
 
 /*--- Pin definition ---*/
 
@@ -61,11 +61,14 @@
   _delay_us(45)
 
 /*--------- Prototype dec ---------*/
-
+typedef enum cmdType
+{
+    LCD_CMD = 0,
+    LCD_CHAR
+} cmdType_t;
 void lcd_write(char *str);
-void lcd_send_char(const char c);
 void lcd_4bit_init(void);
-void lcd_cmd(unsigned char c);
+void lcd_cmd(unsigned char c, cmdType_t type);
 
 //void lcd_flash_write(const char * str);
 

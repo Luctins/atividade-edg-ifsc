@@ -46,13 +46,17 @@
  */
 void lcd_4bit_init(void)
 {
+  rst_bit(LCD_RS); // indica instrução
+  rst_bit(LCD_EN); // enable em 0
 
   /* wait for VCC to stabilize */
 	_delay_ms(20);
 
-  rst_bit(LCD_RS); // indica instrução
-  rst_bit(LCD_EN); // enable em 0
-
+#if USE_LOWER_NIBLE
+  LCD_PORT |= 0x03;
+#else
+  LCD_PORT |= 0x30;
+#endif
 
   //habilitação respeitando os tempos de resposta do LCD
 	enable_pulse();
@@ -61,26 +65,35 @@ void lcd_4bit_init(void)
 	_delay_us(200);
 	enable_pulse();
 
-	#if USE_LOWER_NIBLE
-		LCD_PORT |= 0x02;
-	#else
-		LCD_PORT |= 0x20;
-	#endif
+#if USE_LOWER_NIBLE
+  LCD_PORT |= 0x02;
+#else
+  LCD_PORT |= 0x20;
+#endif
+  enable_pulse();
 
-	enable_pulse();
-  lcd_cmd(0x28); //interface de 4 bits 2 linhas (aqui se habilita as 2 linhas)
-  lcd_cmd(0x08); //desliga o display
-  lcd_cmd(0x01); //limpa todo o display
-  lcd_cmd(0x0C); //mensagem aparente cursor inativo não piscando
-  lcd_cmd(0x80); //inicializa cursor na primeira posição a esquerda - 1a linha
+  lcd_cmd(0x28,LCD_CMD); //interface de 4 bits 2 linhas (aqui se habilita as 2 linhas)
+  lcd_cmd(0x08,LCD_CMD); //desliga o display
+  lcd_cmd(0x01,LCD_CMD); //limpa todo o display
+  lcd_cmd(0x0C,LCD_CMD); //mensagem aparente cursor inativo não piscando
+  lcd_cmd(0x80,LCD_CMD); //inicializa cursor na primeira posição a esquerda - 1a linha
 }
 
 /**
    send a single command to the display.
 */
-void lcd_cmd(unsigned char c /*!< command to send */)
+void lcd_cmd(
+    unsigned char c, /*!< command to send */
+    cmdType_t cmd)
 {
-    rst_bit(LCD_RS);
+    switch(cmd) {
+    case LCD_CMD:
+        rst_bit(LCD_RS);
+        break;
+    case LCD_CHAR:
+        set_bit(LCD_RS);
+        break;
+    }
     /*send first nibble (high half) of data*/
 #if USE_LOWER_NIBLE
     LCD_PORT |= (c & 0xf0) >> 4;

@@ -29,6 +29,7 @@
 #define _E(x) x
 #define E(e) _E(e)
 
+#define USE_ASM_MACRO 0
 /*--------- Bit test and set macros ---------*/
 
 #if USE_ASM_MACRO

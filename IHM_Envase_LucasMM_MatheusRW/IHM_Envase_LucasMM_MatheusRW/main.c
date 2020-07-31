@@ -36,7 +36,6 @@
 #include <avr/interrupt.h>
 #include <stdint.h>
 
-#define USE_ASM_MACRO 1
 #include "util.h"
 
 #include "lcd.h"
