@@ -122,6 +122,12 @@
      <ITEM name="nItems">0</ITEM>
     </PROPERTIES>
    </POPUP>
+   <POPUP w="695" x="999" flags="00008001" y="427" h="453" pid="0" iid="36">
+    <PROPERTIES/>
+   </POPUP>
+   <POPUP w="695" x="1006" flags="00000001" y="222" h="453" pid="0" iid="37">
+    <PROPERTIES/>
+   </POPUP>
   </PWI>
  </MODULE>
 </WORKSPACE>

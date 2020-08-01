@@ -89,6 +89,7 @@ typedef enum runState {
     WAITING = 0, /*!< esperando caixas */
     DETECTED,    /*!< caixa detectada */
     LOADING,     /*!< despejando material */
+	CLOSING,     /*!< fecha CYL_C para poder liberar caixa */
     RELEASING,   /*!< libera caixa e recarrega compartimento interno */
 } runState_t;
 
@@ -128,18 +129,34 @@ int main(void)
 
             break;
         case RUN:
-            switch(run_state)
+            switch(run_state) //TODO: prever casos impossíveis / erros
             {
             case WAITING:
+				//lcd_write("Waiting for next box");
+				if(get_bit(SNS_CX)==0) run_state = DETECTED;
                 break;
             case DETECTED:
-
+				//lcd_write("Box detected");
+				set_bit(CYL_A);
+				set_bit(CYL_B);
+				if(get_bit(A_1)==0 && get_bit(B_1)==0) run_state = LOADING;
                 break;
             case LOADING:
-
+				//lcd_write("Loading box");
+				rst_bit(CYL_C);
+				//_delay_ms(variable * 1000);  TODO: create variable for user-defined wait time (seconds)
+				if(get_bit(C_O)==0) run_state = RELEASING;
                 break;
+			case CLOSING:
+				//lcd_write("Closing dispenser");
+				set_bit(CYL_C);
+				if(get_bit(C_1)==0) run_state = RELEASING;
+				break;
             case RELEASING:
-
+				//lcd_write("Releasing box");
+				set_bit(CYL_A);
+				set_bit(CYL_B);
+				if(get_bit(A_1)==0 && get_bit(B_1)==0) run_state = LOADING;
                 break;
             }
             break;
