@@ -109,6 +109,17 @@ typedef enum runState {
 
 const char pwd_txt[] = "Password:";
 
+
+/*
+static void drawIdle()
+{
+    const char * l = "|/-\\";
+    static char * c = l;
+
+    lcd_move_cursor(0xf, 0);
+    lcd_cmd(*c, cmdType_t type);
+        }
+*/
 /*--------- Globals ---------*/
 
 volatile machineState_t major_state = START;
@@ -145,8 +156,12 @@ int main(void)
     while(1) {
         switch(major_state) {
         case START:
-            //TODO: chech initial state
-            major_state = PWD;
+            rst_bit(CYL_A);
+            set_bit(CYL_B);
+            set_bit(CYL_C);
+            if(get_bit(A_O) && get_bit(B_1) && get_bit(C_1)) {
+                major_state = PWD;
+            }
             break;
         case PWD:
             lcd_clear();
@@ -155,19 +170,23 @@ int main(void)
             //draw * equivalent to the input password len
             uint8_t curr_opt = 0;
             uint8_t pwd_len = 0;
-            while(major_state == PWD)
+            while(1)
             {
                 lcd_move_cursor(pwd_len, 1);
                 lcd_cmd('0' + curr_opt, LCD_CMD);
-                if(get_bit(UP_BTN)) {
+                while(get_bit(UP_BTN) && get_bit(DWN_BTN) && get_bit(ENTR_BTN)) {
+                    //draw_idle();
+            }
+
+                if(!get_bit(UP_BTN)) {
                     curr_opt = curr_opt >= 9 ? 0 : curr_opt + 1;
                     _delay_ms(50);
                 }
-                if(get_bit(DWN_BTN)) {
+                if(!get_bit(DWN_BTN)) {
                     curr_opt = curr_opt == 0 ? 9 : curr_opt - 1;
                     _delay_ms(50);
                 }
-                if(get_bit(ENTR_BTN)) {
+                if(!get_bit(ENTR_BTN)) {
                     if(pwd_len == 4)
                     {
                         //check password match
@@ -188,6 +207,7 @@ int main(void)
                     else {
                         pwd_buff[pwd_len] = '0' + curr_opt;
                     }
+                    _delay_ms(50);
                 }
             }
         case CONFIG:
