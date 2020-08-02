@@ -35,7 +35,10 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <stdint.h>
+
+#include <stdio.h>
 #include <string.h>
+
 
 #include "util.h"
 
@@ -77,9 +80,13 @@
 
 /*--- Default Values ---*/
 #define FILL_DELAY_DEFAULT 500
+
 #define PWD_DEFAULT "1111"
 #define PWD_LEN (4)
 
+#define LOT_SIZE_DEFAULT 3
+#define LOT_QUANTITY_DEFAULT 0
+#define LOT_NUMBER_DEFAULT 1
 
 /*--------- predeclaration ---------*/
 typedef enum machineState {
@@ -107,9 +114,14 @@ const char pwd_txt[] = "password:";
 volatile machineState_t major_state = START;
 volatile runState_t run_state = WAITING;
 
+
 volatile uint32_t fill_delay_ms = FILL_DELAY_DEFAULT;
 
 char pwd_buff[PWD_LEN+1]= "\0";
+
+uint8_t lot_size = LOT_SIZE_DEFAULT;            //Caixas por lote (definida na config)
+uint8_t lot_quantity = LOT_QUANTITY_DEFAULT;    //Caixas prontas no lote atual
+uint8_t lot_number = LOT_NUMBER_DEFAULT;        //Número do lote (quantos lotes já foram feitos)
 
 /*--------- Main ---------*/
 int main(void)
@@ -130,10 +142,8 @@ int main(void)
 
     lcd_write("Hello there!");
     _delay_ms(500);
-  while(1)
-    {
-        switch(major_state)
-        {
+    while(1) {
+        switch(major_state) {
         case START:
             //TODO: chech initial state
             break;
@@ -148,27 +158,24 @@ int main(void)
             {
                 lcd_move_cursor(pwd_len, 1);
                 lcd_cmd('0' + curr_opt, LCD_CMD);
-                if(get_bit(UP_BTN))
-                {
+                if(get_bit(UP_BTN)) {
                     curr_opt = curr_opt >= 9 ? 0 : curr_opt + 1;
                     _delay_ms(50);
                 }
-                if(get_bit(DWN_BTN))
-                {
+                if(get_bit(DWN_BTN)) {
                     curr_opt = curr_opt == 0 ? 9 : curr_opt - 1;
                     _delay_ms(50);
                 }
-                if(get_bit(ENTR_BTN))
-                {
+                if(get_bit(ENTR_BTN)) {
                     if(pwd_len == 4)
                     {
-                        if(strncmp(PWD_DEFAULT, pwd_buff, 4) == 0) //check password match
-                        {
+                        //check password match
+                        if(strncmp(PWD_DEFAULT, pwd_buff, 4) == 0) {
                             major_state = CONFIG;
                             break;
                         }
-                        else //wrong password
-                        {
+                        //wrong password
+                        else {
                             lcd_move_cursor(0, 1);
                             lcd_write("wrong passwd");
                             _delay_ms(500);
@@ -177,8 +184,7 @@ int main(void)
                             pwd_len = 0;
                         }
                     }
-                    else
-                    {
+                    else {
                         pwd_buff[pwd_len] = '0' + curr_opt;
                     }
                 }
@@ -190,18 +196,18 @@ int main(void)
 
             break;
         case RUN:
-            switch(run_state) //TODO: prever casos impossíveis / erros, limpar lcd antes de escrever as coisas novas
-            {
+            //TODO: prever casos impossíveis / erros, trocar lcd_clears por comando de mover cursor pro inicio do lcd
+            switch(run_state) {
             case WAITING:
-                lcd_clear();
-                //lcd_write("Waiting for next box");
+                lcd_move_cursor(0,0);
+                lcd_write("Waiting box    ");
                 if(get_bit(SNS_CX)==0) {
                     run_state = DETECTED;
                 }
                 break;
             case DETECTED:
-                lcd_clear();
-                //lcd_write("Box detected");
+                lcd_move_cursor(0,0);
+                lcd_write("Box detected   ");
                 set_bit(CYL_A);
                 set_bit(CYL_B);
                 if(get_bit(A_1)==0 && get_bit(B_1)==0) {
@@ -209,32 +215,61 @@ int main(void)
                 }
                 break;
             case LOADING:
-				//lcd_write("Loading box");
-				rst_bit(CYL_C);
-				//_delay_ms(variable * 1000);  TODO: create variable for user-defined wait time (seconds)
-				if(get_bit(C_O)==0) run_state = RELEASING;
+                lcd_move_cursor(0,0);
+                lcd_write("Loading box    ");
+                rst_bit(CYL_C);
+                //_delay_ms(fill_delay_ms); TODO
+                if(get_bit(C_O)==0) {
+                    run_state = RELEASING;
+                }
                 break;
-			case CLOSING:
-				//lcd_write("Closing dispenser");
-				set_bit(CYL_C);
-				if(get_bit(C_1)==0) run_state = RELEASING;
-				break;
+            case CLOSING:
+                lcd_move_cursor(0,0);
+                lcd_write("Closing disp.  ");
+                set_bit(CYL_C);
+                if(get_bit(C_1)==0) {
+                    run_state = RELEASING;
+                }
+                break;
             case RELEASING:
-				//lcd_write("Releasing box");
-				set_bit(CYL_A);
-				set_bit(CYL_B);
-				if(get_bit(A_1)==0 && get_bit(B_1)==0) run_state = LOADING;
+                lcd_move_cursor(0,0);
+                lcd_write("Releasing box  ");
+                set_bit(CYL_A);
+                set_bit(CYL_B);
+                if(get_bit(A_1)==0 && get_bit(B_1)==0) {
+                    lcd_move_cursor(0,0);
+                    lcd_write("Box finished   ");
+                    ++ lot_quantity; //Incrementa uma caixa no lote atual
+                    if (lot_quantity == lot_size) //Se o lote atuala atingiu o número de caixas desejado
+                    {
+                        ++ lot_number; //Incrementa número de lotes prontos
+                        lot_quantity = 0; //Reinicia contagem de caixas no lote
+                        lcd_move_cursor(0,0);
+                        lcd_write("Lot finished   ");
+                        _delay_ms(1000);
+                        lcd_move_cursor(0,0);
+                        lcd_write("Start next lot ");
+                        _delay_ms(1000);
+                    }
+                    run_state = WAITING;
+                }
                 break;
+                //Segunda linha do LCD, status do lote:
+                char buff[17];
+                snprintf(buff,17, "Lot %02i, box %02i ",lot_number,lot_quantity+1);
+                lcd_move_cursor(0,1);
+                lcd_write(buff);
             }
             break;
         case PAUSE:
-			//lcd_write("System paused...");
+            lcd_move_cursor(0,0);
+            lcd_write("System paused..");
             break;
         default:
         case ERROR:
-
-			//lcd_write("SYSTEM ERROR");
-			break;
+            lcd_clear();
+            lcd_write("SYSTEM ERROR");
+            break;
         }
     }
 }
@@ -242,12 +277,12 @@ int main(void)
 /*--------- Interrupts ---------*/
 ISR(E_STOP_INTR) //Emergency stop button ISR
 {
-   major_state = ERROR;
-	set_bit(CYL_B);
-	set_bit(CYL_C);
-	rst_bit(CYL_A);
+    major_state = ERROR;
+    set_bit(CYL_B);
+    set_bit(CYL_C);
+    rst_bit(CYL_A);
 
-   while(!get_bit(E_STOP_BTN)); //lock the machine while the emergency button is pressed
+    while(!get_bit(E_STOP_BTN)); //lock the machine while the emergency button is pressed
 }
 ISR(PAUSE_INT)
 {
