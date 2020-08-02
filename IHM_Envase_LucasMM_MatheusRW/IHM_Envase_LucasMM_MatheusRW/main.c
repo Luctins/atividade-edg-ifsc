@@ -171,25 +171,23 @@ int main(void)
             lcd_write(pwd_txt);
             //draw * equivalent to the input password len
             uint8_t curr_opt = 0;
-            uint8_t pwd_len = 0;
+            uint8_t pwd_pos = 0;
             while(1)
             {
-                lcd_move_cursor(pwd_len, 1);
-                lcd_cmd('0' + curr_opt, LCD_CMD);
+                lcd_move_cursor(0, 1);
+                lcd_write(pwd_buff);
                 while(get_bit(UP_BTN) && get_bit(DWN_BTN) && get_bit(ENTR_BTN)) {
                     //draw_idle();
-            }
+                }
 
                 if(!get_bit(UP_BTN)) {
                     curr_opt = curr_opt >= 9 ? 0 : curr_opt + 1;
                     _delay_ms(50);
-                }
-                if(!get_bit(DWN_BTN)) {
+                } else if (!get_bit(DWN_BTN)) {
                     curr_opt = curr_opt == 0 ? 9 : curr_opt - 1;
                     _delay_ms(50);
-                }
-                if(!get_bit(ENTR_BTN)) {
-                    if(pwd_len == 4)
+                } else if (!get_bit(ENTR_BTN)) {
+                    if(pwd_pos == 4)
                     {
                         //check password match
                         if(strncmp(PWD_DEFAULT, pwd_buff, 4) == 0) {
@@ -203,11 +201,12 @@ int main(void)
                             _delay_ms(500);
                             lcd_move_cursor(0, 1);
                             lcd_write("                ");
-                            pwd_len = 0;
+                            pwd_pos = 0;
                         }
                     }
                     else {
-                        pwd_buff[pwd_len] = '0' + curr_opt;
+                        pwd_buff[pwd_pos] = '0' + curr_opt;
+                        ++curr_opt;
                     }
                     _delay_ms(50);
                 }

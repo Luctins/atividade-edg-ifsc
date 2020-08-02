@@ -15,11 +15,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
   5 .debug_aranges 00000060  00000000  00000000  00000da4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   000016c5  00000000  00000000  00000e04  2**0
+  6 .debug_info   000016c8  00000000  00000000  00000e04  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 0000092b  00000000  00000000  000024c9  2**0
+  7 .debug_abbrev 0000092b  00000000  00000000  000024cc  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   000008cd  00000000  00000000  00002df4  2**0
+  8 .debug_line   000008cd  00000000  00000000  00002df7  2**0
                   CONTENTS, READONLY, DEBUGGING
   9 .debug_frame  000000c8  00000000  00000000  000036c4  2**2
                   CONTENTS, READONLY, DEBUGGING
@@ -473,8 +473,8 @@ int main(void)
 			{
 				major_state=RUN;
  262:	68 94       	set
- 264:	cc 24       	eor	r12, r12
- 266:	c2 f8       	bld	r12, 2
+ 264:	ee 24       	eor	r14, r14
+ 266:	e2 f8       	bld	r14, 2
                     _delay_ms(50);
                 }
             }
@@ -483,7 +483,7 @@ int main(void)
 			major_state=READY;
  268:	0f 2e       	mov	r0, r31
  26a:	f3 e0       	ldi	r31, 0x03	; 3
- 26c:	df 2e       	mov	r13, r31
+ 26c:	ff 2e       	mov	r15, r31
  26e:	f0 2d       	mov	r31, r0
             break;
         case RUN:
@@ -491,200 +491,191 @@ int main(void)
 			//Segunda linha do LCD, status do lote:
 			char buff[17];
 			snprintf(buff,17, "Lot %02i, box %02i ",lot_number,lot_quantity+1);
- 270:	02 e2       	ldi	r16, 0x22	; 34
- 272:	11 e0       	ldi	r17, 0x01	; 1
- 274:	0f 2e       	mov	r0, r31
- 276:	f1 e1       	ldi	r31, 0x11	; 17
- 278:	af 2e       	mov	r10, r31
+ 270:	0f 2e       	mov	r0, r31
+ 272:	f2 e2       	ldi	r31, 0x22	; 34
+ 274:	af 2e       	mov	r10, r31
+ 276:	f1 e0       	ldi	r31, 0x01	; 1
+ 278:	bf 2e       	mov	r11, r31
  27a:	f0 2d       	mov	r31, r0
- 27c:	fe 01       	movw	r30, r28
- 27e:	31 96       	adiw	r30, 0x01	; 1
- 280:	7f 01       	movw	r14, r30
+ 27c:	0f 2e       	mov	r0, r31
+ 27e:	f1 e1       	ldi	r31, 0x11	; 17
+ 280:	cf 2e       	mov	r12, r31
+ 282:	f0 2d       	mov	r31, r0
+ 284:	8e 01       	movw	r16, r28
+ 286:	0f 5f       	subi	r16, 0xFF	; 255
+ 288:	1f 4f       	sbci	r17, 0xFF	; 255
                 lcd_move_cursor(0,0);
                 lcd_write("Box detected   ");
                 set_bit(CYL_A);
                 set_bit(CYL_B);
                 if(get_bit(A_1)==0 && get_bit(B_1)==0) {
                     run_state = LOADING;
- 282:	68 94       	set
- 284:	bb 24       	eor	r11, r11
- 286:	b1 f8       	bld	r11, 1
+ 28a:	68 94       	set
+ 28c:	dd 24       	eor	r13, r13
+ 28e:	d1 f8       	bld	r13, 1
     lcd_4bit_init();
 
     lcd_write("Booting...     ");
     _delay_ms(2000);
     while(1) {
         switch(major_state) {
- 288:	80 91 e5 01 	lds	r24, 0x01E5	; 0x8001e5 <major_state>
- 28c:	82 30       	cpi	r24, 0x02	; 2
- 28e:	09 f4       	brne	.+2      	; 0x292 <main+0x7e>
- 290:	72 c0       	rjmp	.+228    	; 0x376 <main+0x162>
- 292:	28 f4       	brcc	.+10     	; 0x29e <main+0x8a>
- 294:	88 23       	and	r24, r24
- 296:	61 f0       	breq	.+24     	; 0x2b0 <main+0x9c>
- 298:	81 30       	cpi	r24, 0x01	; 1
- 29a:	d9 f0       	breq	.+54     	; 0x2d2 <main+0xbe>
- 29c:	40 c1       	rjmp	.+640    	; 0x51e <__LOCK_REGION_LENGTH__+0x11e>
- 29e:	84 30       	cpi	r24, 0x04	; 4
- 2a0:	09 f4       	brne	.+2      	; 0x2a4 <main+0x90>
- 2a2:	78 c0       	rjmp	.+240    	; 0x394 <main+0x180>
- 2a4:	08 f4       	brcc	.+2      	; 0x2a8 <main+0x94>
- 2a6:	69 c0       	rjmp	.+210    	; 0x37a <main+0x166>
- 2a8:	85 30       	cpi	r24, 0x05	; 5
- 2aa:	09 f4       	brne	.+2      	; 0x2ae <main+0x9a>
- 2ac:	2f c1       	rjmp	.+606    	; 0x50c <__LOCK_REGION_LENGTH__+0x10c>
- 2ae:	37 c1       	rjmp	.+622    	; 0x51e <__LOCK_REGION_LENGTH__+0x11e>
+ 290:	80 91 e5 01 	lds	r24, 0x01E5	; 0x8001e5 <major_state>
+ 294:	82 30       	cpi	r24, 0x02	; 2
+ 296:	09 f4       	brne	.+2      	; 0x29a <main+0x86>
+ 298:	6e c0       	rjmp	.+220    	; 0x376 <main+0x162>
+ 29a:	28 f4       	brcc	.+10     	; 0x2a6 <main+0x92>
+ 29c:	88 23       	and	r24, r24
+ 29e:	61 f0       	breq	.+24     	; 0x2b8 <main+0xa4>
+ 2a0:	81 30       	cpi	r24, 0x01	; 1
+ 2a2:	d9 f0       	breq	.+54     	; 0x2da <main+0xc6>
+ 2a4:	3c c1       	rjmp	.+632    	; 0x51e <__LOCK_REGION_LENGTH__+0x11e>
+ 2a6:	84 30       	cpi	r24, 0x04	; 4
+ 2a8:	09 f4       	brne	.+2      	; 0x2ac <main+0x98>
+ 2aa:	74 c0       	rjmp	.+232    	; 0x394 <main+0x180>
+ 2ac:	08 f4       	brcc	.+2      	; 0x2b0 <main+0x9c>
+ 2ae:	65 c0       	rjmp	.+202    	; 0x37a <main+0x166>
+ 2b0:	85 30       	cpi	r24, 0x05	; 5
+ 2b2:	09 f4       	brne	.+2      	; 0x2b6 <main+0xa2>
+ 2b4:	2b c1       	rjmp	.+598    	; 0x50c <__LOCK_REGION_LENGTH__+0x10c>
+ 2b6:	33 c1       	rjmp	.+614    	; 0x51e <__LOCK_REGION_LENGTH__+0x11e>
         case START:
             major_state = READY; //TODO: mudar depois que resolver o PWD
- 2b0:	d0 92 e5 01 	sts	0x01E5, r13	; 0x8001e5 <major_state>
+ 2b8:	f0 92 e5 01 	sts	0x01E5, r15	; 0x8001e5 <major_state>
             run_state = WAITING;
- 2b4:	10 92 e4 01 	sts	0x01E4, r1	; 0x8001e4 <run_state>
+ 2bc:	10 92 e4 01 	sts	0x01E4, r1	; 0x8001e4 <run_state>
             rst_bit(CYL_A);
- 2b8:	43 98       	cbi	0x08, 3	; 8
+ 2c0:	43 98       	cbi	0x08, 3	; 8
             rst_bit(CYL_B);
- 2ba:	44 98       	cbi	0x08, 4	; 8
+ 2c2:	44 98       	cbi	0x08, 4	; 8
             set_bit(CYL_C);
- 2bc:	45 9a       	sbi	0x08, 5	; 8
+ 2c4:	45 9a       	sbi	0x08, 5	; 8
             if(get_bit(A_0)==0 && get_bit(B_1)==0 && get_bit(C_1)==0) {
- 2be:	18 99       	sbic	0x03, 0	; 3
- 2c0:	e3 cf       	rjmp	.-58     	; 0x288 <main+0x74>
- 2c2:	1b 99       	sbic	0x03, 3	; 3
- 2c4:	e1 cf       	rjmp	.-62     	; 0x288 <main+0x74>
- 2c6:	1d 99       	sbic	0x03, 5	; 3
- 2c8:	df cf       	rjmp	.-66     	; 0x288 <main+0x74>
+ 2c6:	18 99       	sbic	0x03, 0	; 3
+ 2c8:	e3 cf       	rjmp	.-58     	; 0x290 <main+0x7c>
+ 2ca:	1b 99       	sbic	0x03, 3	; 3
+ 2cc:	e1 cf       	rjmp	.-62     	; 0x290 <main+0x7c>
+ 2ce:	1d 99       	sbic	0x03, 5	; 3
+ 2d0:	df cf       	rjmp	.-66     	; 0x290 <main+0x7c>
                 major_state = PWD;
- 2ca:	81 e0       	ldi	r24, 0x01	; 1
- 2cc:	80 93 e5 01 	sts	0x01E5, r24	; 0x8001e5 <major_state>
- 2d0:	db cf       	rjmp	.-74     	; 0x288 <main+0x74>
+ 2d2:	81 e0       	ldi	r24, 0x01	; 1
+ 2d4:	80 93 e5 01 	sts	0x01E5, r24	; 0x8001e5 <major_state>
+ 2d8:	db cf       	rjmp	.-74     	; 0x290 <main+0x7c>
             }
             break;
         case PWD:
             lcd_clear();
- 2d2:	60 e0       	ldi	r22, 0x00	; 0
- 2d4:	81 e0       	ldi	r24, 0x01	; 1
- 2d6:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+ 2da:	60 e0       	ldi	r22, 0x00	; 0
+ 2dc:	81 e0       	ldi	r24, 0x01	; 1
+ 2de:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
 void lcd_4bit_init(void);
 void lcd_cmd(unsigned char c, cmdType_t type);
 
 inline void lcd_move_cursor(uint8_t c, uint8_t l)
 {
     lcd_cmd(0x80 + (c < 0x0f ? c : 0x0f ) + (l > 0 ? 0x40 : 0), LCD_CMD);
- 2da:	60 e0       	ldi	r22, 0x00	; 0
- 2dc:	80 e8       	ldi	r24, 0x80	; 128
- 2de:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+ 2e2:	60 e0       	ldi	r22, 0x00	; 0
+ 2e4:	80 e8       	ldi	r24, 0x80	; 128
+ 2e6:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
             lcd_move_cursor(0,0);
             lcd_write(pwd_txt);
- 2e2:	83 ed       	ldi	r24, 0xD3	; 211
- 2e4:	91 e0       	ldi	r25, 0x01	; 1
- 2e6:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
+ 2ea:	83 ed       	ldi	r24, 0xD3	; 211
+ 2ec:	91 e0       	ldi	r25, 0x01	; 1
+ 2ee:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
             //draw * equivalent to the input password len
             uint8_t curr_opt = 0;
- 2ea:	10 e0       	ldi	r17, 0x00	; 0
-                            lcd_write("                ");
-                            pwd_len = 0;
-                        }
-                    }
-                    else {
-                        pwd_buff[pwd_len] = '0' + curr_opt;
- 2ec:	0f 2e       	mov	r0, r31
- 2ee:	ff ed       	ldi	r31, 0xDF	; 223
- 2f0:	ef 2e       	mov	r14, r31
- 2f2:	f1 e0       	ldi	r31, 0x01	; 1
- 2f4:	ff 2e       	mov	r15, r31
- 2f6:	f0 2d       	mov	r31, r0
- 2f8:	60 e0       	ldi	r22, 0x00	; 0
- 2fa:	80 ec       	ldi	r24, 0xC0	; 192
- 2fc:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
-            uint8_t curr_opt = 0;
-            uint8_t pwd_len = 0;
+ 2f2:	10 e0       	ldi	r17, 0x00	; 0
+ 2f4:	60 e0       	ldi	r22, 0x00	; 0
+ 2f6:	80 ec       	ldi	r24, 0xC0	; 192
+ 2f8:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+            uint8_t pwd_pos = 0;
             while(1)
             {
-                lcd_move_cursor(pwd_len, 1);
-                lcd_cmd('0' + curr_opt, LCD_CMD);
- 300:	60 e0       	ldi	r22, 0x00	; 0
- 302:	80 e3       	ldi	r24, 0x30	; 48
- 304:	81 0f       	add	r24, r17
- 306:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+                lcd_move_cursor(0, 1);
+                lcd_write(pwd_buff);
+ 2fc:	8f ed       	ldi	r24, 0xDF	; 223
+ 2fe:	91 e0       	ldi	r25, 0x01	; 1
+ 300:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
                 while(get_bit(UP_BTN) && get_bit(DWN_BTN) && get_bit(ENTR_BTN)) {
- 30a:	1f 9b       	sbis	0x03, 7	; 3
- 30c:	04 c0       	rjmp	.+8      	; 0x316 <main+0x102>
- 30e:	30 9b       	sbis	0x06, 0	; 6
- 310:	02 c0       	rjmp	.+4      	; 0x316 <main+0x102>
- 312:	31 99       	sbic	0x06, 1	; 6
- 314:	fa cf       	rjmp	.-12     	; 0x30a <main+0xf6>
+ 304:	1f 9b       	sbis	0x03, 7	; 3
+ 306:	04 c0       	rjmp	.+8      	; 0x310 <main+0xfc>
+ 308:	30 9b       	sbis	0x06, 0	; 6
+ 30a:	02 c0       	rjmp	.+4      	; 0x310 <main+0xfc>
+ 30c:	31 99       	sbic	0x06, 1	; 6
+ 30e:	fa cf       	rjmp	.-12     	; 0x304 <main+0xf0>
                     //draw_idle();
-            }
+                }
 
                 if(!get_bit(UP_BTN)) {
- 316:	1f 99       	sbic	0x03, 7	; 3
- 318:	0e c0       	rjmp	.+28     	; 0x336 <main+0x122>
+ 310:	1f 99       	sbic	0x03, 7	; 3
+ 312:	0f c0       	rjmp	.+30     	; 0x332 <main+0x11e>
                     curr_opt = curr_opt >= 9 ? 0 : curr_opt + 1;
- 31a:	19 30       	cpi	r17, 0x09	; 9
- 31c:	10 f4       	brcc	.+4      	; 0x322 <main+0x10e>
- 31e:	1f 5f       	subi	r17, 0xFF	; 255
- 320:	01 c0       	rjmp	.+2      	; 0x324 <main+0x110>
- 322:	10 e0       	ldi	r17, 0x00	; 0
- 324:	ff ef       	ldi	r31, 0xFF	; 255
- 326:	20 e7       	ldi	r18, 0x70	; 112
- 328:	32 e0       	ldi	r19, 0x02	; 2
- 32a:	f1 50       	subi	r31, 0x01	; 1
- 32c:	20 40       	sbci	r18, 0x00	; 0
- 32e:	30 40       	sbci	r19, 0x00	; 0
- 330:	e1 f7       	brne	.-8      	; 0x32a <main+0x116>
- 332:	00 c0       	rjmp	.+0      	; 0x334 <main+0x120>
- 334:	00 00       	nop
+ 314:	19 30       	cpi	r17, 0x09	; 9
+ 316:	10 f4       	brcc	.+4      	; 0x31c <main+0x108>
+ 318:	1f 5f       	subi	r17, 0xFF	; 255
+ 31a:	01 c0       	rjmp	.+2      	; 0x31e <main+0x10a>
+ 31c:	10 e0       	ldi	r17, 0x00	; 0
+ 31e:	9f ef       	ldi	r25, 0xFF	; 255
+ 320:	20 e7       	ldi	r18, 0x70	; 112
+ 322:	32 e0       	ldi	r19, 0x02	; 2
+ 324:	91 50       	subi	r25, 0x01	; 1
+ 326:	20 40       	sbci	r18, 0x00	; 0
+ 328:	30 40       	sbci	r19, 0x00	; 0
+ 32a:	e1 f7       	brne	.-8      	; 0x324 <main+0x110>
+ 32c:	00 c0       	rjmp	.+0      	; 0x32e <main+0x11a>
+ 32e:	00 00       	nop
+ 330:	e1 cf       	rjmp	.-62     	; 0x2f4 <main+0xe0>
                     _delay_ms(50);
-                }
-                if(!get_bit(DWN_BTN)) {
- 336:	30 99       	sbic	0x06, 0	; 6
- 338:	0e c0       	rjmp	.+28     	; 0x356 <main+0x142>
+                } else if (!get_bit(DWN_BTN)) {
+ 332:	30 99       	sbic	0x06, 0	; 6
+ 334:	0f c0       	rjmp	.+30     	; 0x354 <main+0x140>
                     curr_opt = curr_opt == 0 ? 9 : curr_opt - 1;
- 33a:	11 23       	and	r17, r17
- 33c:	11 f0       	breq	.+4      	; 0x342 <main+0x12e>
- 33e:	11 50       	subi	r17, 0x01	; 1
- 340:	01 c0       	rjmp	.+2      	; 0x344 <main+0x130>
- 342:	19 e0       	ldi	r17, 0x09	; 9
- 344:	8f ef       	ldi	r24, 0xFF	; 255
- 346:	90 e7       	ldi	r25, 0x70	; 112
- 348:	e2 e0       	ldi	r30, 0x02	; 2
- 34a:	81 50       	subi	r24, 0x01	; 1
- 34c:	90 40       	sbci	r25, 0x00	; 0
- 34e:	e0 40       	sbci	r30, 0x00	; 0
- 350:	e1 f7       	brne	.-8      	; 0x34a <main+0x136>
- 352:	00 c0       	rjmp	.+0      	; 0x354 <main+0x140>
- 354:	00 00       	nop
+ 336:	11 23       	and	r17, r17
+ 338:	11 f0       	breq	.+4      	; 0x33e <main+0x12a>
+ 33a:	11 50       	subi	r17, 0x01	; 1
+ 33c:	01 c0       	rjmp	.+2      	; 0x340 <main+0x12c>
+ 33e:	19 e0       	ldi	r17, 0x09	; 9
+ 340:	8f ef       	ldi	r24, 0xFF	; 255
+ 342:	90 e7       	ldi	r25, 0x70	; 112
+ 344:	22 e0       	ldi	r18, 0x02	; 2
+ 346:	81 50       	subi	r24, 0x01	; 1
+ 348:	90 40       	sbci	r25, 0x00	; 0
+ 34a:	20 40       	sbci	r18, 0x00	; 0
+ 34c:	e1 f7       	brne	.-8      	; 0x346 <main+0x132>
+ 34e:	00 c0       	rjmp	.+0      	; 0x350 <main+0x13c>
+ 350:	00 00       	nop
+ 352:	d0 cf       	rjmp	.-96     	; 0x2f4 <main+0xe0>
                     _delay_ms(50);
-                }
-                if(!get_bit(ENTR_BTN)) {
- 356:	31 99       	sbic	0x06, 1	; 6
- 358:	cf cf       	rjmp	.-98     	; 0x2f8 <main+0xe4>
+                } else if (!get_bit(ENTR_BTN)) {
+ 354:	31 99       	sbic	0x06, 1	; 6
+ 356:	ce cf       	rjmp	.-100    	; 0x2f4 <main+0xe0>
                             lcd_write("                ");
-                            pwd_len = 0;
+                            pwd_pos = 0;
                         }
                     }
                     else {
-                        pwd_buff[pwd_len] = '0' + curr_opt;
- 35a:	80 e3       	ldi	r24, 0x30	; 48
- 35c:	81 0f       	add	r24, r17
- 35e:	f7 01       	movw	r30, r14
- 360:	80 83       	st	Z, r24
- 362:	ff ef       	ldi	r31, 0xFF	; 255
- 364:	20 e7       	ldi	r18, 0x70	; 112
- 366:	32 e0       	ldi	r19, 0x02	; 2
- 368:	f1 50       	subi	r31, 0x01	; 1
- 36a:	20 40       	sbci	r18, 0x00	; 0
- 36c:	30 40       	sbci	r19, 0x00	; 0
+                        pwd_buff[pwd_pos] = '0' + curr_opt;
+ 358:	80 e3       	ldi	r24, 0x30	; 48
+ 35a:	81 0f       	add	r24, r17
+ 35c:	80 93 df 01 	sts	0x01DF, r24	; 0x8001df <pwd_buff>
+                        ++curr_opt;
+ 360:	1f 5f       	subi	r17, 0xFF	; 255
+ 362:	3f ef       	ldi	r19, 0xFF	; 255
+ 364:	80 e7       	ldi	r24, 0x70	; 112
+ 366:	92 e0       	ldi	r25, 0x02	; 2
+ 368:	31 50       	subi	r19, 0x01	; 1
+ 36a:	80 40       	sbci	r24, 0x00	; 0
+ 36c:	90 40       	sbci	r25, 0x00	; 0
  36e:	e1 f7       	brne	.-8      	; 0x368 <main+0x154>
  370:	00 c0       	rjmp	.+0      	; 0x372 <main+0x15e>
  372:	00 00       	nop
- 374:	c1 cf       	rjmp	.-126    	; 0x2f8 <main+0xe4>
+ 374:	bf cf       	rjmp	.-130    	; 0x2f4 <main+0xe0>
                     _delay_ms(50);
                 }
             }
         case CONFIG:
             //TODO: ask for lot size, fill_delay
 			major_state=READY;
- 376:	d0 92 e5 01 	sts	0x01E5, r13	; 0x8001e5 <major_state>
+ 376:	f0 92 e5 01 	sts	0x01E5, r15	; 0x8001e5 <major_state>
  37a:	60 e0       	ldi	r22, 0x00	; 0
  37c:	80 e8       	ldi	r24, 0x80	; 128
  37e:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
@@ -697,11 +688,11 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  386:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
 			if (get_bit(STRT_STOP_BTN)==0)
  38a:	32 99       	sbic	0x06, 2	; 6
- 38c:	7d cf       	rjmp	.-262    	; 0x288 <main+0x74>
+ 38c:	81 cf       	rjmp	.-254    	; 0x290 <main+0x7c>
 			{
 				major_state=RUN;
- 38e:	c0 92 e5 01 	sts	0x01E5, r12	; 0x8001e5 <major_state>
- 392:	7a cf       	rjmp	.-268    	; 0x288 <main+0x74>
+ 38e:	e0 92 e5 01 	sts	0x01E5, r14	; 0x8001e5 <major_state>
+ 392:	7e cf       	rjmp	.-260    	; 0x290 <main+0x7c>
             break;
         case RUN:
 			;
@@ -716,19 +707,19 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  3a0:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <__data_start>
  3a4:	1f 92       	push	r1
  3a6:	8f 93       	push	r24
- 3a8:	1f 93       	push	r17
- 3aa:	0f 93       	push	r16
+ 3a8:	bf 92       	push	r11
+ 3aa:	af 92       	push	r10
  3ac:	1f 92       	push	r1
- 3ae:	af 92       	push	r10
- 3b0:	ff 92       	push	r15
- 3b2:	ef 92       	push	r14
+ 3ae:	cf 92       	push	r12
+ 3b0:	1f 93       	push	r17
+ 3b2:	0f 93       	push	r16
  3b4:	0e 94 d0 02 	call	0x5a0	; 0x5a0 <snprintf>
  3b8:	60 e0       	ldi	r22, 0x00	; 0
  3ba:	80 ec       	ldi	r24, 0xC0	; 192
  3bc:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
 			lcd_move_cursor(0,1);
 			lcd_write(buff);
- 3c0:	c7 01       	movw	r24, r14
+ 3c0:	c8 01       	movw	r24, r16
  3c2:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
             //TODO: prever casos impossíveis / erros, trocar lcd_clears por comando de mover cursor pro inicio do lcd
             switch(run_state) {
@@ -745,12 +736,12 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  3dc:	41 f0       	breq	.+16     	; 0x3ee <main+0x1da>
  3de:	81 30       	cpi	r24, 0x01	; 1
  3e0:	a1 f0       	breq	.+40     	; 0x40a <__LOCK_REGION_LENGTH__+0xa>
- 3e2:	52 cf       	rjmp	.-348    	; 0x288 <main+0x74>
+ 3e2:	56 cf       	rjmp	.-340    	; 0x290 <main+0x7c>
  3e4:	83 30       	cpi	r24, 0x03	; 3
  3e6:	81 f1       	breq	.+96     	; 0x448 <__LOCK_REGION_LENGTH__+0x48>
  3e8:	84 30       	cpi	r24, 0x04	; 4
  3ea:	e1 f1       	breq	.+120    	; 0x464 <__LOCK_REGION_LENGTH__+0x64>
- 3ec:	4d cf       	rjmp	.-358    	; 0x288 <main+0x74>
+ 3ec:	51 cf       	rjmp	.-350    	; 0x290 <main+0x7c>
  3ee:	60 e0       	ldi	r22, 0x00	; 0
  3f0:	80 e8       	ldi	r24, 0x80	; 128
  3f2:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
@@ -762,11 +753,11 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  3fa:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
                 if(get_bit(SNS_CX)==0) {
  3fe:	1e 99       	sbic	0x03, 6	; 3
- 400:	43 cf       	rjmp	.-378    	; 0x288 <main+0x74>
+ 400:	47 cf       	rjmp	.-370    	; 0x290 <main+0x7c>
                     run_state = DETECTED;
  402:	81 e0       	ldi	r24, 0x01	; 1
  404:	80 93 e4 01 	sts	0x01E4, r24	; 0x8001e4 <run_state>
- 408:	3f cf       	rjmp	.-386    	; 0x288 <main+0x74>
+ 408:	43 cf       	rjmp	.-378    	; 0x290 <main+0x7c>
  40a:	60 e0       	ldi	r22, 0x00	; 0
  40c:	80 e8       	ldi	r24, 0x80	; 128
  40e:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
@@ -784,12 +775,12 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  41c:	44 9a       	sbi	0x08, 4	; 8
                 if(get_bit(A_1)==0 && get_bit(B_1)==0) {
  41e:	19 99       	sbic	0x03, 1	; 3
- 420:	33 cf       	rjmp	.-410    	; 0x288 <main+0x74>
+ 420:	37 cf       	rjmp	.-402    	; 0x290 <main+0x7c>
  422:	1b 99       	sbic	0x03, 3	; 3
- 424:	31 cf       	rjmp	.-414    	; 0x288 <main+0x74>
+ 424:	35 cf       	rjmp	.-406    	; 0x290 <main+0x7c>
                     run_state = LOADING;
- 426:	b0 92 e4 01 	sts	0x01E4, r11	; 0x8001e4 <run_state>
- 42a:	2e cf       	rjmp	.-420    	; 0x288 <main+0x74>
+ 426:	d0 92 e4 01 	sts	0x01E4, r13	; 0x8001e4 <run_state>
+ 42a:	32 cf       	rjmp	.-412    	; 0x290 <main+0x7c>
  42c:	60 e0       	ldi	r22, 0x00	; 0
  42e:	80 e8       	ldi	r24, 0x80	; 128
  430:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
@@ -806,10 +797,10 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
                 //_delay_ms(fill_delay_ms); TODO
                 if(get_bit(C_0)==0) {
  43e:	1c 99       	sbic	0x03, 4	; 3
- 440:	23 cf       	rjmp	.-442    	; 0x288 <main+0x74>
+ 440:	27 cf       	rjmp	.-434    	; 0x290 <main+0x7c>
                     run_state = CLOSING;
- 442:	d0 92 e4 01 	sts	0x01E4, r13	; 0x8001e4 <run_state>
- 446:	20 cf       	rjmp	.-448    	; 0x288 <main+0x74>
+ 442:	f0 92 e4 01 	sts	0x01E4, r15	; 0x8001e4 <run_state>
+ 446:	24 cf       	rjmp	.-440    	; 0x290 <main+0x7c>
  448:	60 e0       	ldi	r22, 0x00	; 0
  44a:	80 e8       	ldi	r24, 0x80	; 128
  44c:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
@@ -825,10 +816,10 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  458:	45 9a       	sbi	0x08, 5	; 8
                 if(get_bit(C_1)==0) {
  45a:	1d 99       	sbic	0x03, 5	; 3
- 45c:	15 cf       	rjmp	.-470    	; 0x288 <main+0x74>
+ 45c:	19 cf       	rjmp	.-462    	; 0x290 <main+0x7c>
                     run_state = RELEASING;
- 45e:	c0 92 e4 01 	sts	0x01E4, r12	; 0x8001e4 <run_state>
- 462:	12 cf       	rjmp	.-476    	; 0x288 <main+0x74>
+ 45e:	e0 92 e4 01 	sts	0x01E4, r14	; 0x8001e4 <run_state>
+ 462:	16 cf       	rjmp	.-468    	; 0x290 <main+0x7c>
  464:	60 e0       	ldi	r22, 0x00	; 0
  466:	80 e8       	ldi	r24, 0x80	; 128
  468:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
@@ -846,9 +837,9 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  476:	44 98       	cbi	0x08, 4	; 8
                 if(get_bit(A_0)==0 && get_bit(B_0)==0) {
  478:	18 99       	sbic	0x03, 0	; 3
- 47a:	06 cf       	rjmp	.-500    	; 0x288 <main+0x74>
+ 47a:	0a cf       	rjmp	.-492    	; 0x290 <main+0x7c>
  47c:	1a 99       	sbic	0x03, 2	; 3
- 47e:	04 cf       	rjmp	.-504    	; 0x288 <main+0x74>
+ 47e:	08 cf       	rjmp	.-496    	; 0x290 <main+0x7c>
  480:	60 e0       	ldi	r22, 0x00	; 0
  482:	80 e8       	ldi	r24, 0x80	; 128
  484:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
@@ -857,12 +848,12 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  488:	86 e8       	ldi	r24, 0x86	; 134
  48a:	91 e0       	ldi	r25, 0x01	; 1
  48c:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
- 490:	ff ef       	ldi	r31, 0xFF	; 255
- 492:	27 ea       	ldi	r18, 0xA7	; 167
- 494:	31 e6       	ldi	r19, 0x61	; 97
- 496:	f1 50       	subi	r31, 0x01	; 1
- 498:	20 40       	sbci	r18, 0x00	; 0
- 49a:	30 40       	sbci	r19, 0x00	; 0
+ 490:	3f ef       	ldi	r19, 0xFF	; 255
+ 492:	87 ea       	ldi	r24, 0xA7	; 167
+ 494:	91 e6       	ldi	r25, 0x61	; 97
+ 496:	31 50       	subi	r19, 0x01	; 1
+ 498:	80 40       	sbci	r24, 0x00	; 0
+ 49a:	90 40       	sbci	r25, 0x00	; 0
  49c:	e1 f7       	brne	.-8      	; 0x496 <__LOCK_REGION_LENGTH__+0x96>
  49e:	00 c0       	rjmp	.+0      	; 0x4a0 <__LOCK_REGION_LENGTH__+0xa0>
  4a0:	00 00       	nop
@@ -890,12 +881,12 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  4ca:	86 e9       	ldi	r24, 0x96	; 150
  4cc:	91 e0       	ldi	r25, 0x01	; 1
  4ce:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
- 4d2:	8f ef       	ldi	r24, 0xFF	; 255
- 4d4:	93 ed       	ldi	r25, 0xD3	; 211
- 4d6:	e0 e3       	ldi	r30, 0x30	; 48
- 4d8:	81 50       	subi	r24, 0x01	; 1
- 4da:	90 40       	sbci	r25, 0x00	; 0
- 4dc:	e0 40       	sbci	r30, 0x00	; 0
+ 4d2:	2f ef       	ldi	r18, 0xFF	; 255
+ 4d4:	33 ed       	ldi	r19, 0xD3	; 211
+ 4d6:	80 e3       	ldi	r24, 0x30	; 48
+ 4d8:	21 50       	subi	r18, 0x01	; 1
+ 4da:	30 40       	sbci	r19, 0x00	; 0
+ 4dc:	80 40       	sbci	r24, 0x00	; 0
  4de:	e1 f7       	brne	.-8      	; 0x4d8 <__LOCK_REGION_LENGTH__+0xd8>
  4e0:	00 c0       	rjmp	.+0      	; 0x4e2 <__LOCK_REGION_LENGTH__+0xe2>
  4e2:	00 00       	nop
@@ -908,10 +899,10 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  4ec:	86 ea       	ldi	r24, 0xA6	; 166
  4ee:	91 e0       	ldi	r25, 0x01	; 1
  4f0:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
- 4f4:	ff ef       	ldi	r31, 0xFF	; 255
+ 4f4:	9f ef       	ldi	r25, 0xFF	; 255
  4f6:	23 ed       	ldi	r18, 0xD3	; 211
  4f8:	30 e3       	ldi	r19, 0x30	; 48
- 4fa:	f1 50       	subi	r31, 0x01	; 1
+ 4fa:	91 50       	subi	r25, 0x01	; 1
  4fc:	20 40       	sbci	r18, 0x00	; 0
  4fe:	30 40       	sbci	r19, 0x00	; 0
  500:	e1 f7       	brne	.-8      	; 0x4fa <__LOCK_REGION_LENGTH__+0xfa>
@@ -921,7 +912,7 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
                     }
                     run_state = WAITING;
  506:	10 92 e4 01 	sts	0x01E4, r1	; 0x8001e4 <run_state>
- 50a:	be ce       	rjmp	.-644    	; 0x288 <main+0x74>
+ 50a:	c2 ce       	rjmp	.-636    	; 0x290 <main+0x7c>
  50c:	60 e0       	ldi	r22, 0x00	; 0
  50e:	80 e8       	ldi	r24, 0x80	; 128
  510:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
@@ -935,7 +926,7 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  516:	91 e0       	ldi	r25, 0x01	; 1
  518:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
             break;
- 51c:	b5 ce       	rjmp	.-662    	; 0x288 <main+0x74>
+ 51c:	b9 ce       	rjmp	.-654    	; 0x290 <main+0x7c>
         default:
         case ERROR:
             lcd_clear();
@@ -949,7 +940,7 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
             break;
         }
     }
- 52e:	ac ce       	rjmp	.-680    	; 0x288 <main+0x74>
+ 52e:	b0 ce       	rjmp	.-672    	; 0x290 <main+0x7c>
 
 00000530 <__vector_1>:
 }
