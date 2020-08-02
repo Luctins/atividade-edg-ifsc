@@ -107,7 +107,7 @@ typedef enum runState {
     RELEASING,   /*!< libera caixa e recarrega compartimento interno */
 } runState_t;
 
-const char pwd_txt[] = "password:";
+const char pwd_txt[] = "Password:";
 
 /*--------- Globals ---------*/
 
