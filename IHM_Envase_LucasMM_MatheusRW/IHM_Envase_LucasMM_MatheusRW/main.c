@@ -73,7 +73,7 @@
 
 #define PAUSE_BTN PIND,3
 #define PAUSE_INT INT1_vect
-
+#define FILL_DELAY_DEFAULT 500
 
 /*--------- predeclaration ---------*/
 typedef enum machineState {
@@ -98,13 +98,15 @@ typedef enum runState {
 volatile machineState_t major_state = START;
 volatile runState_t run_state = WAITING;
 
+uint32_t fill_delay_ms = FILL_DELAY_DEFAULT;
+
 /*--------- Main ---------*/
 int main(void)
 {
     //configure interrupts
     EICRA |= 0b00001010; //set INT0 and INT1 as falling edge
-	
-//TODO: EIMSK??
+
+    EIMSK |= 0x03; //enable INT 1 and 0
 
     //set up pin directions
     DDRB = 0x00;
@@ -125,7 +127,7 @@ int main(void)
             //TODO: chech initial state
             break;
         case CONFIG:
-            //TODO: run user config
+            //TODO: run user config (lcd dependant)
         break;
         case READY:
 
@@ -134,14 +136,20 @@ int main(void)
             switch(run_state) //TODO: prever casos impossíveis / erros, limpar lcd antes de escrever as coisas novas
             {
             case WAITING:
-				//lcd_write("Waiting for next box");
-				if(get_bit(SNS_CX)==0) run_state = DETECTED;
+                lcd_clear();
+                //lcd_write("Waiting for next box");
+                if(get_bit(SNS_CX)==0) {
+                    run_state = DETECTED;
+                }
                 break;
             case DETECTED:
-				//lcd_write("Box detected");
-				set_bit(CYL_A);
-				set_bit(CYL_B);
-				if(get_bit(A_1)==0 && get_bit(B_1)==0) run_state = LOADING;
+                lcd_clear();
+                //lcd_write("Box detected");
+                set_bit(CYL_A);
+                set_bit(CYL_B);
+                if(get_bit(A_1)==0 && get_bit(B_1)==0) {
+                    run_state = LOADING;
+                }
                 break;
             case LOADING:
 				//lcd_write("Loading box");

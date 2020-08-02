@@ -37,7 +37,7 @@
 
 /*--- Constants ---*/
 
-#define USE_LOWER_NIBLE 0
+#define USE_LOWER_NIBLE 0 //use PD4-7
 
 /*--- Pin definition ---*/
 
@@ -72,7 +72,7 @@ void lcd_cmd(unsigned char c, cmdType_t type);
 
 //void lcd_flash_write(const char * str);
 
-#define lcd_clear() lcd_cmd(0x01);
+#define lcd_clear() lcd_cmd(0x01,LCD_CMD);
 
 
 #endif /* __LCD_H__ */

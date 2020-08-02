@@ -43,48 +43,52 @@
 
 /**
    sequência ditada pelo fabricando do circuito integrado HD44780
- */
+*/
 void lcd_4bit_init(void)
 {
-  rst_bit(LCD_RS); // indica instrução
-  rst_bit(LCD_EN); // enable em 0
+    /* wait for VCC to stabilize */
+    _delay_ms(20);
 
-  /* wait for VCC to stabilize */
-	_delay_ms(20);
+    /* reset lcd port bits and set RS low */
+    LCD_PORT &= 0x0f;
+    rst_bit(LCD_RS);
+
+    /**
+       LCD startup sequence following the datasheet for 4 bits (page 46)
+       @see https://www.sparkfun.com/datasheets/LCD/HD44780.pdf
+    */
+#if USE_LOWER_NIBLE
+    LCD_PORT |= 0x03;
+#else
+    LCD_PORT |= 0x30;
+#endif
+    enable_pulse();
+    _delay_ms(5);
+    enable_pulse();
+    _delay_us(200);
+    enable_pulse();
 
 #if USE_LOWER_NIBLE
-  LCD_PORT |= 0x03;
+    LCD_PORT |= 0x02;
 #else
-  LCD_PORT |= 0x30;
+    LCD_PORT |= 0x20;
 #endif
+    enable_pulse();
+    enable_pulse();
 
-  //habilitação respeitando os tempos de resposta do LCD
-	enable_pulse();
-	_delay_ms(5);
-	enable_pulse();
-	_delay_us(200);
-	enable_pulse();
-
-#if USE_LOWER_NIBLE
-  LCD_PORT |= 0x02;
-#else
-  LCD_PORT |= 0x20;
-#endif
-  enable_pulse();
-
-  lcd_cmd(0x28,LCD_CMD); //interface de 4 bits 2 linhas (aqui se habilita as 2 linhas)
-  lcd_cmd(0x08,LCD_CMD); //desliga o display
-  lcd_cmd(0x01,LCD_CMD); //limpa todo o display
-  lcd_cmd(0x0C,LCD_CMD); //mensagem aparente cursor inativo não piscando
-  lcd_cmd(0x80,LCD_CMD); //inicializa cursor na primeira posição a esquerda - 1a linha
+    /* set interface 4 bits, 2 lines, 8 dots font  */
+    lcd_cmd(0b00101000,LCD_CMD);
+    lcd_cmd(0x08,LCD_CMD); // turn off display
+    lcd_cmd(0x01,LCD_CMD); // clear display
+    lcd_cmd(0b00001110,LCD_CMD); // turn displ. on, visible cursor, no blink
+    lcd_cmd(0x80,LCD_CMD); //set CGRAM adress to 0 (1st position)
 }
 
 /**
    send a single command to the display.
 */
-void lcd_cmd(
-    unsigned char c, /*!< command to send */
-    cmdType_t cmd)
+void lcd_cmd(unsigned char c, /*!< command to send */
+             cmdType_t cmd /*!< command to send */)
 {
     switch(cmd) {
     case LCD_CMD:
@@ -94,6 +98,7 @@ void lcd_cmd(
         set_bit(LCD_RS);
         break;
     }
+
     /*send first nibble (high half) of data*/
 #if USE_LOWER_NIBLE
     LCD_PORT |= (c & 0xf0) >> 4;
@@ -110,39 +115,20 @@ void lcd_cmd(
 #endif
     enable_pulse();
 
-    //se for instrução de retorno ou limpeza espera LCD estar pronto
+    //wait if cmd is clear or return home (exec time ~1.52ms)
     if(c<4)
     {
         _delay_ms(2);
     }
-}
-
-void lcd_send_char(const char c)
-{
     set_bit(LCD_RS);
-
-#if USE_LOWER_NIBLE
-    LCD_PORT |= (c & 0xf0) >> 4;
-#else
-    LCD_PORT |= (c & 0xf0);
-#endif
-    enable_pulse();
-
-    /*send second (lower) nibble of data*/
-#if USE_LOWER_NIBLE
-    LCD_PORT |= (c & 0x0f);
-#else
-    LCD_PORT |= (c & 0x0f) << 4;
-#endif
-    enable_pulse();
-
 }
+
 /**
    write a string to the display.
  */
 void lcd_write(char *str)
 {
-   for (;*str;++str) lcd_send_char(*str);
+    for (;*str;++str) lcd_cmd(*str,LCD_CHAR);
 }
 
 #if 0
