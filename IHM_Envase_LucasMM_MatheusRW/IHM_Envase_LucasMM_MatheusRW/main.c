@@ -35,6 +35,7 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "util.h"
 
@@ -74,6 +75,9 @@
 #define PAUSE_BTN PIND,3
 #define PAUSE_INT INT1_vect
 #define FILL_DELAY_DEFAULT 500
+#define LOT_SIZE_DEFAULT 3
+#define LOT_QUANTITY_DEFAULT 0
+#define LOT_NUMBER_DEFAULT 1
 
 /*--------- predeclaration ---------*/
 typedef enum machineState {
@@ -99,7 +103,10 @@ volatile machineState_t major_state = START;
 volatile runState_t run_state = WAITING;
 
 uint32_t fill_delay_ms = FILL_DELAY_DEFAULT;
-
+uint8_t lot_size = LOT_SIZE_DEFAULT;            //Caixas por lote (definida na config)
+uint8_t lot_quantity = LOT_QUANTITY_DEFAULT;    //Caixas prontas no lote atual
+uint8_t lot_number = LOT_NUMBER_DEFAULT;        //Número do lote (quantos lotes já foram feitos)
+ 
 /*--------- Main ---------*/
 int main(void)
 {
@@ -136,15 +143,15 @@ int main(void)
             switch(run_state) //TODO: prever casos impossíveis / erros, trocar lcd_clears por comando de mover cursor pro inicio do lcd
             {
             case WAITING:
-                lcd_clear();
-                lcd_write("Waiting next box");
+				lcd_move_cursor(0,0);
+                lcd_write("Waiting box    ");
                 if(get_bit(SNS_CX)==0) {
                     run_state = DETECTED;
                 }
                 break;
             case DETECTED:
-                lcd_clear();
-                lcd_write("Box detected    ");
+                lcd_move_cursor(0,0);
+                lcd_write("Box detected   ");
                 set_bit(CYL_A);
                 set_bit(CYL_B);
                 if(get_bit(A_1)==0 && get_bit(B_1)==0) {
@@ -152,36 +159,55 @@ int main(void)
                 }
                 break;
             case LOADING:
-				lcd_clear();
-				lcd_write("Loading box     ");
+				lcd_move_cursor(0,0);
+				lcd_write("Loading box    ");
 				rst_bit(CYL_C);
-				_delay_ms(fill_delay_ms);
+				//_delay_ms(fill_delay_ms); TODO
 				if(get_bit(C_O)==0) {
 					run_state = RELEASING;
 				}
                 break;
 			case CLOSING:
-				lcd_clear();
-				lcd_write("Closing disp.   ");
+				lcd_move_cursor(0,0);
+				lcd_write("Closing disp.  ");
 				set_bit(CYL_C);
 				if(get_bit(C_1)==0) {
 					run_state = RELEASING;
 				}
 				break;
             case RELEASING:
-				lcd_clear();
-				lcd_write("Releasing box   ");
+				lcd_move_cursor(0,0);
+				lcd_write("Releasing box  ");
 				set_bit(CYL_A);
 				set_bit(CYL_B);
 				if(get_bit(A_1)==0 && get_bit(B_1)==0) {
-					run_state = LOADING;
+					lcd_move_cursor(0,0);
+					lcd_write("Box finished   ");
+					++ lot_quantity; //Incrementa uma caixa no lote atual
+					if (lot_quantity == lot_size) //Se o lote atuala atingiu o número de caixas desejado
+					{
+						++ lot_number; //Incrementa número de lotes prontos
+						lot_quantity = 0; //Reinicia contagem de caixas no lote
+						lcd_move_cursor(0,0);
+						lcd_write("Lot finished   ");
+						_delay_ms(1000);
+						lcd_move_cursor(0,0);
+						lcd_write("Start next lot ");
+						_delay_ms(1000);
+					}
+					run_state = WAITING;
 				}
                 break;
+				//Segunda linha do LCD, status do lote:
+				char buff[17];
+				snprintf(buff,17, "Lot %02i, box %02i ",lot_number,lot_quantity+1);
+				lcd_move_cursor(0,1);
+				lcd_write(buff);
             }
             break;
         case PAUSE:
-			lcd_clear();
-			lcd_write("System paused...");
+			lcd_move_cursor(0,0);
+			lcd_write("System paused..");
             break;
         default:
         case ERROR:

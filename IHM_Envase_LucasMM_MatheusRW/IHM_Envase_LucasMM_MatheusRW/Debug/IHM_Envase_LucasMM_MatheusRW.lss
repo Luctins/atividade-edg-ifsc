@@ -3,39 +3,39 @@ IHM_Envase_LucasMM_MatheusRW.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .data         00000016  00800100  00000350  000003e4  2**0
+  0 .data         000000ac  00800100  00000414  000004a8  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  1 .text         00000350  00000000  00000000  00000094  2**1
+  1 .text         00000414  00000000  00000000  00000094  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .bss          00000002  00800116  00800116  000003fa  2**0
+  2 .bss          00000003  008001ac  008001ac  00000554  2**0
                   ALLOC
-  3 .comment      00000030  00000000  00000000  000003fa  2**0
+  3 .comment      00000030  00000000  00000000  00000554  2**0
                   CONTENTS, READONLY
-  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  0000042c  2**2
+  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000584  2**2
                   CONTENTS, READONLY
-  5 .debug_aranges 00000060  00000000  00000000  0000046c  2**0
+  5 .debug_aranges 00000060  00000000  00000000  000005c4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00000fe9  00000000  00000000  000004cc  2**0
+  6 .debug_info   00001397  00000000  00000000  00000624  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 00000886  00000000  00000000  000014b5  2**0
+  7 .debug_abbrev 000008c1  00000000  00000000  000019bb  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   0000069a  00000000  00000000  00001d3b  2**0
+  8 .debug_line   00000760  00000000  00000000  0000227c  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  000000b8  00000000  00000000  000023d8  2**2
+  9 .debug_frame  000000b8  00000000  00000000  000029dc  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    000004d0  00000000  00000000  00002490  2**0
+ 10 .debug_str    0000050f  00000000  00000000  00002a94  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    000007a7  00000000  00000000  00002960  2**0
+ 11 .debug_loc    000008a3  00000000  00000000  00002fa3  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000040  00000000  00000000  00003107  2**0
+ 12 .debug_ranges 00000058  00000000  00000000  00003846  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
 
 00000000 <__vectors>:
    0:	0c 94 34 00 	jmp	0x68	; 0x68 <__ctors_end>
-   4:	0c 94 6e 01 	jmp	0x2dc	; 0x2dc <__vector_1>
-   8:	0c 94 82 01 	jmp	0x304	; 0x304 <__vector_2>
+   4:	0c 94 d0 01 	jmp	0x3a0	; 0x3a0 <__vector_1>
+   8:	0c 94 e4 01 	jmp	0x3c8	; 0x3c8 <__vector_2>
    c:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
   10:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
   14:	0c 94 51 00 	jmp	0xa2	; 0xa2 <__bad_interrupt>
@@ -72,18 +72,18 @@ Disassembly of section .text:
   74:	11 e0       	ldi	r17, 0x01	; 1
   76:	a0 e0       	ldi	r26, 0x00	; 0
   78:	b1 e0       	ldi	r27, 0x01	; 1
-  7a:	e0 e5       	ldi	r30, 0x50	; 80
-  7c:	f3 e0       	ldi	r31, 0x03	; 3
+  7a:	e4 e1       	ldi	r30, 0x14	; 20
+  7c:	f4 e0       	ldi	r31, 0x04	; 4
   7e:	02 c0       	rjmp	.+4      	; 0x84 <__do_copy_data+0x10>
   80:	05 90       	lpm	r0, Z+
   82:	0d 92       	st	X+, r0
-  84:	a6 31       	cpi	r26, 0x16	; 22
+  84:	ac 3a       	cpi	r26, 0xAC	; 172
   86:	b1 07       	cpc	r27, r17
   88:	d9 f7       	brne	.-10     	; 0x80 <__do_copy_data+0xc>
 
 0000008a <__do_clear_bss>:
   8a:	21 e0       	ldi	r18, 0x01	; 1
-  8c:	a6 e1       	ldi	r26, 0x16	; 22
+  8c:	ac ea       	ldi	r26, 0xAC	; 172
   8e:	b1 e0       	ldi	r27, 0x01	; 1
   90:	01 c0       	rjmp	.+2      	; 0x94 <.do_clear_bss_start>
 
@@ -91,11 +91,11 @@ Disassembly of section .text:
   92:	1d 92       	st	X+, r1
 
 00000094 <.do_clear_bss_start>:
-  94:	a8 31       	cpi	r26, 0x18	; 24
+  94:	af 3a       	cpi	r26, 0xAF	; 175
   96:	b2 07       	cpc	r27, r18
   98:	e1 f7       	brne	.-8      	; 0x92 <.do_clear_bss_loop>
   9a:	0e 94 0a 01 	call	0x214	; 0x214 <main>
-  9e:	0c 94 a6 01 	jmp	0x34c	; 0x34c <_exit>
+  9e:	0c 94 08 02 	jmp	0x410	; 0x410 <_exit>
 
 000000a2 <__bad_interrupt>:
   a2:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -402,7 +402,7 @@ void lcd_write(char *str)
  212:	08 95       	ret
 
 00000214 <main>:
-
+ 
 /*--------- Main ---------*/
 int main(void)
 {
@@ -436,225 +436,338 @@ int main(void)
  230:	0e 94 92 00 	call	0x124	; 0x124 <lcd_4bit_init>
 
     lcd_write("Hello there!");
- 234:	80 e0       	ldi	r24, 0x00	; 0
+ 234:	82 e0       	ldi	r24, 0x02	; 2
  236:	91 e0       	ldi	r25, 0x01	; 1
  238:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
+				lcd_move_cursor(0,0);
+				lcd_write("Loading box    ");
+				rst_bit(CYL_C);
+				//_delay_ms(fill_delay_ms); TODO
+				if(get_bit(C_O)==0) {
+					run_state = RELEASING;
+ 23c:	d4 e0       	ldi	r29, 0x04	; 4
+            {
+            case WAITING:
+				lcd_move_cursor(0,0);
+                lcd_write("Waiting box    ");
+                if(get_bit(SNS_CX)==0) {
+                    run_state = DETECTED;
+ 23e:	c1 e0       	ldi	r28, 0x01	; 1
+                lcd_move_cursor(0,0);
+                lcd_write("Box detected   ");
+                set_bit(CYL_A);
+                set_bit(CYL_B);
+                if(get_bit(A_1)==0 && get_bit(B_1)==0) {
+                    run_state = LOADING;
+ 240:	12 e0       	ldi	r17, 0x02	; 2
+
+    lcd_write("Hello there!");
+
+  while(1)
+    {
+        switch(major_state)
+ 242:	80 91 ae 01 	lds	r24, 0x01AE	; 0x8001ae <major_state>
+ 246:	83 30       	cpi	r24, 0x03	; 3
+ 248:	29 f0       	breq	.+10     	; 0x254 <main+0x40>
+ 24a:	d8 f3       	brcs	.-10     	; 0x242 <main+0x2e>
+ 24c:	84 30       	cpi	r24, 0x04	; 4
+ 24e:	09 f4       	brne	.+2      	; 0x252 <main+0x3e>
+ 250:	95 c0       	rjmp	.+298    	; 0x37c <main+0x168>
+ 252:	9d c0       	rjmp	.+314    	; 0x38e <main+0x17a>
+        break;
+        case READY:
+
+            break;
+        case RUN:
+            switch(run_state) //TODO: prever casos impossíveis / erros, trocar lcd_clears por comando de mover cursor pro inicio do lcd
+ 254:	80 91 ad 01 	lds	r24, 0x01AD	; 0x8001ad <run_state>
+ 258:	82 30       	cpi	r24, 0x02	; 2
+ 25a:	49 f1       	breq	.+82     	; 0x2ae <main+0x9a>
+ 25c:	28 f4       	brcc	.+10     	; 0x268 <main+0x54>
+ 25e:	88 23       	and	r24, r24
+ 260:	41 f0       	breq	.+16     	; 0x272 <main+0x5e>
+ 262:	81 30       	cpi	r24, 0x01	; 1
+ 264:	99 f0       	breq	.+38     	; 0x28c <main+0x78>
+ 266:	ed cf       	rjmp	.-38     	; 0x242 <main+0x2e>
+ 268:	83 30       	cpi	r24, 0x03	; 3
+ 26a:	79 f1       	breq	.+94     	; 0x2ca <main+0xb6>
+ 26c:	84 30       	cpi	r24, 0x04	; 4
+ 26e:	d9 f1       	breq	.+118    	; 0x2e6 <main+0xd2>
+ 270:	e8 cf       	rjmp	.-48     	; 0x242 <main+0x2e>
+void lcd_4bit_init(void);
+void lcd_cmd(unsigned char c, cmdType_t type);
+
+inline void lcd_move_cursor(uint8_t l, uint8_t c)
+{
+    lcd_cmd(0x80 | ((l < 0x0f ? l : 0x0f )+(c > 0 ? 0x40 : 0)), LCD_CMD);
+ 272:	60 e0       	ldi	r22, 0x00	; 0
+ 274:	80 e8       	ldi	r24, 0x80	; 128
+ 276:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+            {
+            case WAITING:
+				lcd_move_cursor(0,0);
+                lcd_write("Waiting box    ");
+ 27a:	8f e0       	ldi	r24, 0x0F	; 15
+ 27c:	91 e0       	ldi	r25, 0x01	; 1
+ 27e:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
+                if(get_bit(SNS_CX)==0) {
+ 282:	1e 99       	sbic	0x03, 6	; 3
+ 284:	de cf       	rjmp	.-68     	; 0x242 <main+0x2e>
+                    run_state = DETECTED;
+ 286:	c0 93 ad 01 	sts	0x01AD, r28	; 0x8001ad <run_state>
+ 28a:	db cf       	rjmp	.-74     	; 0x242 <main+0x2e>
+ 28c:	60 e0       	ldi	r22, 0x00	; 0
+ 28e:	80 e8       	ldi	r24, 0x80	; 128
+ 290:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+                }
+                break;
+            case DETECTED:
+                lcd_move_cursor(0,0);
+                lcd_write("Box detected   ");
+ 294:	8f e1       	ldi	r24, 0x1F	; 31
+ 296:	91 e0       	ldi	r25, 0x01	; 1
+ 298:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
+                set_bit(CYL_A);
+ 29c:	43 9a       	sbi	0x08, 3	; 8
+                set_bit(CYL_B);
+ 29e:	44 9a       	sbi	0x08, 4	; 8
+                if(get_bit(A_1)==0 && get_bit(B_1)==0) {
+ 2a0:	19 99       	sbic	0x03, 1	; 3
+ 2a2:	cf cf       	rjmp	.-98     	; 0x242 <main+0x2e>
+ 2a4:	1b 99       	sbic	0x03, 3	; 3
+ 2a6:	cd cf       	rjmp	.-102    	; 0x242 <main+0x2e>
+                    run_state = LOADING;
+ 2a8:	10 93 ad 01 	sts	0x01AD, r17	; 0x8001ad <run_state>
+ 2ac:	ca cf       	rjmp	.-108    	; 0x242 <main+0x2e>
+ 2ae:	60 e0       	ldi	r22, 0x00	; 0
+ 2b0:	80 e8       	ldi	r24, 0x80	; 128
+ 2b2:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+                }
+                break;
+            case LOADING:
+				lcd_move_cursor(0,0);
+				lcd_write("Loading box    ");
+ 2b6:	8f e2       	ldi	r24, 0x2F	; 47
+ 2b8:	91 e0       	ldi	r25, 0x01	; 1
+ 2ba:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
+				rst_bit(CYL_C);
+ 2be:	45 98       	cbi	0x08, 5	; 8
+				//_delay_ms(fill_delay_ms); TODO
+				if(get_bit(C_O)==0) {
+ 2c0:	1c 99       	sbic	0x03, 4	; 3
+ 2c2:	bf cf       	rjmp	.-130    	; 0x242 <main+0x2e>
+					run_state = RELEASING;
+ 2c4:	d0 93 ad 01 	sts	0x01AD, r29	; 0x8001ad <run_state>
+ 2c8:	bc cf       	rjmp	.-136    	; 0x242 <main+0x2e>
+ 2ca:	60 e0       	ldi	r22, 0x00	; 0
+ 2cc:	80 e8       	ldi	r24, 0x80	; 128
+ 2ce:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+				}
+                break;
+			case CLOSING:
+				lcd_move_cursor(0,0);
+				lcd_write("Closing disp.  ");
+ 2d2:	8f e3       	ldi	r24, 0x3F	; 63
+ 2d4:	91 e0       	ldi	r25, 0x01	; 1
+ 2d6:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
+				set_bit(CYL_C);
+ 2da:	45 9a       	sbi	0x08, 5	; 8
+				if(get_bit(C_1)==0) {
+ 2dc:	1d 99       	sbic	0x03, 5	; 3
+ 2de:	b1 cf       	rjmp	.-158    	; 0x242 <main+0x2e>
+					run_state = RELEASING;
+ 2e0:	d0 93 ad 01 	sts	0x01AD, r29	; 0x8001ad <run_state>
+ 2e4:	ae cf       	rjmp	.-164    	; 0x242 <main+0x2e>
+ 2e6:	60 e0       	ldi	r22, 0x00	; 0
+ 2e8:	80 e8       	ldi	r24, 0x80	; 128
+ 2ea:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+				}
+				break;
+            case RELEASING:
+				lcd_move_cursor(0,0);
+				lcd_write("Releasing box  ");
+ 2ee:	8f e4       	ldi	r24, 0x4F	; 79
+ 2f0:	91 e0       	ldi	r25, 0x01	; 1
+ 2f2:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
+				set_bit(CYL_A);
+ 2f6:	43 9a       	sbi	0x08, 3	; 8
+				set_bit(CYL_B);
+ 2f8:	44 9a       	sbi	0x08, 4	; 8
+				if(get_bit(A_1)==0 && get_bit(B_1)==0) {
+ 2fa:	19 99       	sbic	0x03, 1	; 3
+ 2fc:	a2 cf       	rjmp	.-188    	; 0x242 <main+0x2e>
+ 2fe:	1b 99       	sbic	0x03, 3	; 3
+ 300:	a0 cf       	rjmp	.-192    	; 0x242 <main+0x2e>
+ 302:	60 e0       	ldi	r22, 0x00	; 0
+ 304:	80 e8       	ldi	r24, 0x80	; 128
+ 306:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+					lcd_move_cursor(0,0);
+					lcd_write("Box finished   ");
+ 30a:	8f e5       	ldi	r24, 0x5F	; 95
+ 30c:	91 e0       	ldi	r25, 0x01	; 1
+ 30e:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
+					++ lot_quantity; //Incrementa uma caixa no lote atual
+ 312:	80 91 ac 01 	lds	r24, 0x01AC	; 0x8001ac <__data_end>
+ 316:	8f 5f       	subi	r24, 0xFF	; 255
+ 318:	80 93 ac 01 	sts	0x01AC, r24	; 0x8001ac <__data_end>
+					if (lot_quantity == lot_size) //Se o lote atuala atingiu o número de caixas desejado
+ 31c:	90 91 01 01 	lds	r25, 0x0101	; 0x800101 <lot_size>
+ 320:	89 13       	cpse	r24, r25
+ 322:	29 c0       	rjmp	.+82     	; 0x376 <main+0x162>
+					{
+						++ lot_number; //Incrementa número de lotes prontos
+ 324:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <__data_start>
+ 328:	8f 5f       	subi	r24, 0xFF	; 255
+ 32a:	80 93 00 01 	sts	0x0100, r24	; 0x800100 <__data_start>
+						lot_quantity = 0; //Reinicia contagem de caixas no lote
+ 32e:	10 92 ac 01 	sts	0x01AC, r1	; 0x8001ac <__data_end>
+ 332:	60 e0       	ldi	r22, 0x00	; 0
+ 334:	80 e8       	ldi	r24, 0x80	; 128
+ 336:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+						lcd_move_cursor(0,0);
+						lcd_write("Lot finished   ");
+ 33a:	8f e6       	ldi	r24, 0x6F	; 111
+ 33c:	91 e0       	ldi	r25, 0x01	; 1
+ 33e:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
 	#else
 		//round up by default
 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
 	#endif
 
 	__builtin_avr_delay_cycles(__ticks_dc);
- 23c:	2f ef       	ldi	r18, 0xFF	; 255
- 23e:	87 ea       	ldi	r24, 0xA7	; 167
- 240:	91 e6       	ldi	r25, 0x61	; 97
- 242:	21 50       	subi	r18, 0x01	; 1
- 244:	80 40       	sbci	r24, 0x00	; 0
- 246:	90 40       	sbci	r25, 0x00	; 0
- 248:	e1 f7       	brne	.-8      	; 0x242 <main+0x2e>
- 24a:	00 c0       	rjmp	.+0      	; 0x24c <main+0x38>
- 24c:	00 00       	nop
-	_delay_ms(2000);
-	lcd_4bit_init();//will configure it's own pins
- 24e:	0e 94 92 00 	call	0x124	; 0x124 <lcd_4bit_init>
-
-	lcd_write("Hpenis!");
- 252:	8d e0       	ldi	r24, 0x0D	; 13
- 254:	91 e0       	ldi	r25, 0x01	; 1
- 256:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
-            case LOADING:
-				//lcd_write("Loading box");
-				rst_bit(CYL_C);
-				//_delay_ms(variable * 1000);  TODO: create variable for user-defined wait time (seconds)
-				if(get_bit(C_O)==0) {
-					run_state = RELEASING;
- 25a:	c4 e0       	ldi	r28, 0x04	; 4
-            case RELEASING:
-				//lcd_write("Releasing box");
-				set_bit(CYL_A);
-				set_bit(CYL_B);
-				if(get_bit(A_1)==0 && get_bit(B_1)==0) {
-					run_state = LOADING;
- 25c:	d2 e0       	ldi	r29, 0x02	; 2
-
-	lcd_write("Hpenis!");
-
-  while(1)
-    {
-        switch(major_state)
- 25e:	80 91 17 01 	lds	r24, 0x0117	; 0x800117 <major_state>
- 262:	83 30       	cpi	r24, 0x03	; 3
- 264:	e1 f7       	brne	.-8      	; 0x25e <main+0x4a>
-        break;
-        case READY:
-
+ 342:	2f ef       	ldi	r18, 0xFF	; 255
+ 344:	83 ed       	ldi	r24, 0xD3	; 211
+ 346:	90 e3       	ldi	r25, 0x30	; 48
+ 348:	21 50       	subi	r18, 0x01	; 1
+ 34a:	80 40       	sbci	r24, 0x00	; 0
+ 34c:	90 40       	sbci	r25, 0x00	; 0
+ 34e:	e1 f7       	brne	.-8      	; 0x348 <main+0x134>
+ 350:	00 c0       	rjmp	.+0      	; 0x352 <main+0x13e>
+ 352:	00 00       	nop
+ 354:	60 e0       	ldi	r22, 0x00	; 0
+ 356:	80 e8       	ldi	r24, 0x80	; 128
+ 358:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+						_delay_ms(1000);
+						lcd_move_cursor(0,0);
+						lcd_write("Start next lot ");
+ 35c:	8f e7       	ldi	r24, 0x7F	; 127
+ 35e:	91 e0       	ldi	r25, 0x01	; 1
+ 360:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
+ 364:	2f ef       	ldi	r18, 0xFF	; 255
+ 366:	83 ed       	ldi	r24, 0xD3	; 211
+ 368:	90 e3       	ldi	r25, 0x30	; 48
+ 36a:	21 50       	subi	r18, 0x01	; 1
+ 36c:	80 40       	sbci	r24, 0x00	; 0
+ 36e:	90 40       	sbci	r25, 0x00	; 0
+ 370:	e1 f7       	brne	.-8      	; 0x36a <main+0x156>
+ 372:	00 c0       	rjmp	.+0      	; 0x374 <main+0x160>
+ 374:	00 00       	nop
+						_delay_ms(1000);
+					}
+					run_state = WAITING;
+ 376:	10 92 ad 01 	sts	0x01AD, r1	; 0x8001ad <run_state>
+ 37a:	63 cf       	rjmp	.-314    	; 0x242 <main+0x2e>
+ 37c:	60 e0       	ldi	r22, 0x00	; 0
+ 37e:	80 e8       	ldi	r24, 0x80	; 128
+ 380:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+				lcd_write(buff);
+            }
             break;
-        case RUN:
-            switch(run_state) //TODO: prever casos impossíveis / erros, limpar lcd antes de escrever as coisas novas
- 266:	80 91 16 01 	lds	r24, 0x0116	; 0x800116 <__data_end>
- 26a:	82 30       	cpi	r24, 0x02	; 2
- 26c:	11 f1       	breq	.+68     	; 0x2b2 <main+0x9e>
- 26e:	28 f4       	brcc	.+10     	; 0x27a <main+0x66>
- 270:	88 23       	and	r24, r24
- 272:	41 f0       	breq	.+16     	; 0x284 <main+0x70>
- 274:	81 30       	cpi	r24, 0x01	; 1
- 276:	81 f0       	breq	.+32     	; 0x298 <main+0x84>
- 278:	f2 cf       	rjmp	.-28     	; 0x25e <main+0x4a>
- 27a:	83 30       	cpi	r24, 0x03	; 3
- 27c:	01 f1       	breq	.+64     	; 0x2be <main+0xaa>
- 27e:	84 30       	cpi	r24, 0x04	; 4
- 280:	21 f1       	breq	.+72     	; 0x2ca <main+0xb6>
- 282:	ed cf       	rjmp	.-38     	; 0x25e <main+0x4a>
-            {
-            case WAITING:
-                lcd_clear();
- 284:	60 e0       	ldi	r22, 0x00	; 0
- 286:	81 e0       	ldi	r24, 0x01	; 1
- 288:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
-                //lcd_write("Waiting for next box");
-                if(get_bit(SNS_CX)==0) {
- 28c:	1e 99       	sbic	0x03, 6	; 3
- 28e:	e7 cf       	rjmp	.-50     	; 0x25e <main+0x4a>
-                    run_state = DETECTED;
- 290:	81 e0       	ldi	r24, 0x01	; 1
- 292:	80 93 16 01 	sts	0x0116, r24	; 0x800116 <__data_end>
- 296:	e3 cf       	rjmp	.-58     	; 0x25e <main+0x4a>
-                }
-                break;
-            case DETECTED:
-                lcd_clear();
- 298:	60 e0       	ldi	r22, 0x00	; 0
- 29a:	81 e0       	ldi	r24, 0x01	; 1
- 29c:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
-                //lcd_write("Box detected");
-                set_bit(CYL_A);
- 2a0:	43 9a       	sbi	0x08, 3	; 8
-                set_bit(CYL_B);
- 2a2:	44 9a       	sbi	0x08, 4	; 8
-                if(get_bit(A_1)==0 && get_bit(B_1)==0) {
- 2a4:	19 99       	sbic	0x03, 1	; 3
- 2a6:	db cf       	rjmp	.-74     	; 0x25e <main+0x4a>
- 2a8:	1b 99       	sbic	0x03, 3	; 3
- 2aa:	d9 cf       	rjmp	.-78     	; 0x25e <main+0x4a>
-                    run_state = LOADING;
- 2ac:	d0 93 16 01 	sts	0x0116, r29	; 0x800116 <__data_end>
- 2b0:	d6 cf       	rjmp	.-84     	; 0x25e <main+0x4a>
-                }
-                break;
-            case LOADING:
-				//lcd_write("Loading box");
-				rst_bit(CYL_C);
- 2b2:	45 98       	cbi	0x08, 5	; 8
-				//_delay_ms(variable * 1000);  TODO: create variable for user-defined wait time (seconds)
-				if(get_bit(C_O)==0) {
- 2b4:	1c 99       	sbic	0x03, 4	; 3
- 2b6:	d3 cf       	rjmp	.-90     	; 0x25e <main+0x4a>
-					run_state = RELEASING;
- 2b8:	c0 93 16 01 	sts	0x0116, r28	; 0x800116 <__data_end>
- 2bc:	d0 cf       	rjmp	.-96     	; 0x25e <main+0x4a>
-				}
-                break;
-			case CLOSING:
-				//lcd_write("Closing dispenser");
-				set_bit(CYL_C);
- 2be:	45 9a       	sbi	0x08, 5	; 8
-				if(get_bit(C_1)==0) {
- 2c0:	1d 99       	sbic	0x03, 5	; 3
- 2c2:	cd cf       	rjmp	.-102    	; 0x25e <main+0x4a>
-					run_state = RELEASING;
- 2c4:	c0 93 16 01 	sts	0x0116, r28	; 0x800116 <__data_end>
- 2c8:	ca cf       	rjmp	.-108    	; 0x25e <main+0x4a>
-				}
-				break;
-            case RELEASING:
-				//lcd_write("Releasing box");
-				set_bit(CYL_A);
- 2ca:	43 9a       	sbi	0x08, 3	; 8
-				set_bit(CYL_B);
- 2cc:	44 9a       	sbi	0x08, 4	; 8
-				if(get_bit(A_1)==0 && get_bit(B_1)==0) {
- 2ce:	19 99       	sbic	0x03, 1	; 3
- 2d0:	c6 cf       	rjmp	.-116    	; 0x25e <main+0x4a>
- 2d2:	1b 99       	sbic	0x03, 3	; 3
- 2d4:	c4 cf       	rjmp	.-120    	; 0x25e <main+0x4a>
-					run_state = LOADING;
- 2d6:	d0 93 16 01 	sts	0x0116, r29	; 0x800116 <__data_end>
- 2da:	c1 cf       	rjmp	.-126    	; 0x25e <main+0x4a>
+        case PAUSE:
+			lcd_move_cursor(0,0);
+			lcd_write("System paused..");
+ 384:	8f e8       	ldi	r24, 0x8F	; 143
+ 386:	91 e0       	ldi	r25, 0x01	; 1
+ 388:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
+            break;
+ 38c:	5a cf       	rjmp	.-332    	; 0x242 <main+0x2e>
+        default:
+        case ERROR:
+			lcd_clear();
+ 38e:	60 e0       	ldi	r22, 0x00	; 0
+ 390:	8c 2f       	mov	r24, r28
+ 392:	0e 94 53 00 	call	0xa6	; 0xa6 <lcd_cmd>
+			lcd_write("SYSTEM ERROR");
+ 396:	8f e9       	ldi	r24, 0x9F	; 159
+ 398:	91 e0       	ldi	r25, 0x01	; 1
+ 39a:	0e 94 fa 00 	call	0x1f4	; 0x1f4 <lcd_write>
+			break;
+ 39e:	51 cf       	rjmp	.-350    	; 0x242 <main+0x2e>
 
-000002dc <__vector_1>:
+000003a0 <__vector_1>:
     }
 }
 
 /*--------- Interrupts ---------*/
 ISR(E_STOP_INTR) //Emergency stop button ISR
 {
- 2dc:	1f 92       	push	r1
- 2de:	0f 92       	push	r0
- 2e0:	0f b6       	in	r0, 0x3f	; 63
- 2e2:	0f 92       	push	r0
- 2e4:	11 24       	eor	r1, r1
- 2e6:	8f 93       	push	r24
+ 3a0:	1f 92       	push	r1
+ 3a2:	0f 92       	push	r0
+ 3a4:	0f b6       	in	r0, 0x3f	; 63
+ 3a6:	0f 92       	push	r0
+ 3a8:	11 24       	eor	r1, r1
+ 3aa:	8f 93       	push	r24
    major_state = ERROR;
- 2e8:	85 e0       	ldi	r24, 0x05	; 5
- 2ea:	80 93 17 01 	sts	0x0117, r24	; 0x800117 <major_state>
+ 3ac:	85 e0       	ldi	r24, 0x05	; 5
+ 3ae:	80 93 ae 01 	sts	0x01AE, r24	; 0x8001ae <major_state>
 	set_bit(CYL_B);
- 2ee:	44 9a       	sbi	0x08, 4	; 8
+ 3b2:	44 9a       	sbi	0x08, 4	; 8
 	set_bit(CYL_C);
- 2f0:	45 9a       	sbi	0x08, 5	; 8
+ 3b4:	45 9a       	sbi	0x08, 5	; 8
 	rst_bit(CYL_A);
- 2f2:	43 98       	cbi	0x08, 3	; 8
+ 3b6:	43 98       	cbi	0x08, 3	; 8
    while(!get_bit(E_STOP_BTN)); //lock the machine while the emergency button is pressed
- 2f4:	4a 9b       	sbis	0x09, 2	; 9
- 2f6:	fe cf       	rjmp	.-4      	; 0x2f4 <__vector_1+0x18>
+ 3b8:	4a 9b       	sbis	0x09, 2	; 9
+ 3ba:	fe cf       	rjmp	.-4      	; 0x3b8 <__vector_1+0x18>
 }
- 2f8:	8f 91       	pop	r24
- 2fa:	0f 90       	pop	r0
- 2fc:	0f be       	out	0x3f, r0	; 63
- 2fe:	0f 90       	pop	r0
- 300:	1f 90       	pop	r1
- 302:	18 95       	reti
+ 3bc:	8f 91       	pop	r24
+ 3be:	0f 90       	pop	r0
+ 3c0:	0f be       	out	0x3f, r0	; 63
+ 3c2:	0f 90       	pop	r0
+ 3c4:	1f 90       	pop	r1
+ 3c6:	18 95       	reti
 
-00000304 <__vector_2>:
+000003c8 <__vector_2>:
 ISR(PAUSE_INT)
 {
- 304:	1f 92       	push	r1
- 306:	0f 92       	push	r0
- 308:	0f b6       	in	r0, 0x3f	; 63
- 30a:	0f 92       	push	r0
- 30c:	11 24       	eor	r1, r1
- 30e:	8f 93       	push	r24
- 310:	9f 93       	push	r25
+ 3c8:	1f 92       	push	r1
+ 3ca:	0f 92       	push	r0
+ 3cc:	0f b6       	in	r0, 0x3f	; 63
+ 3ce:	0f 92       	push	r0
+ 3d0:	11 24       	eor	r1, r1
+ 3d2:	8f 93       	push	r24
+ 3d4:	9f 93       	push	r25
     major_state = (major_state == RUN ? PAUSE : (major_state ==  PAUSE ? RUN : major_state));
- 312:	80 91 17 01 	lds	r24, 0x0117	; 0x800117 <major_state>
- 316:	83 30       	cpi	r24, 0x03	; 3
- 318:	39 f0       	breq	.+14     	; 0x328 <__vector_2+0x24>
- 31a:	80 91 17 01 	lds	r24, 0x0117	; 0x800117 <major_state>
- 31e:	84 30       	cpi	r24, 0x04	; 4
- 320:	29 f0       	breq	.+10     	; 0x32c <__vector_2+0x28>
- 322:	80 91 17 01 	lds	r24, 0x0117	; 0x800117 <major_state>
- 326:	03 c0       	rjmp	.+6      	; 0x32e <__vector_2+0x2a>
- 328:	84 e0       	ldi	r24, 0x04	; 4
- 32a:	01 c0       	rjmp	.+2      	; 0x32e <__vector_2+0x2a>
- 32c:	83 e0       	ldi	r24, 0x03	; 3
- 32e:	80 93 17 01 	sts	0x0117, r24	; 0x800117 <major_state>
- 332:	8f e3       	ldi	r24, 0x3F	; 63
- 334:	9c e9       	ldi	r25, 0x9C	; 156
- 336:	01 97       	sbiw	r24, 0x01	; 1
- 338:	f1 f7       	brne	.-4      	; 0x336 <__vector_2+0x32>
- 33a:	00 c0       	rjmp	.+0      	; 0x33c <__vector_2+0x38>
- 33c:	00 00       	nop
+ 3d6:	80 91 ae 01 	lds	r24, 0x01AE	; 0x8001ae <major_state>
+ 3da:	83 30       	cpi	r24, 0x03	; 3
+ 3dc:	39 f0       	breq	.+14     	; 0x3ec <__vector_2+0x24>
+ 3de:	80 91 ae 01 	lds	r24, 0x01AE	; 0x8001ae <major_state>
+ 3e2:	84 30       	cpi	r24, 0x04	; 4
+ 3e4:	29 f0       	breq	.+10     	; 0x3f0 <__vector_2+0x28>
+ 3e6:	80 91 ae 01 	lds	r24, 0x01AE	; 0x8001ae <major_state>
+ 3ea:	03 c0       	rjmp	.+6      	; 0x3f2 <__vector_2+0x2a>
+ 3ec:	84 e0       	ldi	r24, 0x04	; 4
+ 3ee:	01 c0       	rjmp	.+2      	; 0x3f2 <__vector_2+0x2a>
+ 3f0:	83 e0       	ldi	r24, 0x03	; 3
+ 3f2:	80 93 ae 01 	sts	0x01AE, r24	; 0x8001ae <major_state>
+ 3f6:	8f e3       	ldi	r24, 0x3F	; 63
+ 3f8:	9c e9       	ldi	r25, 0x9C	; 156
+ 3fa:	01 97       	sbiw	r24, 0x01	; 1
+ 3fc:	f1 f7       	brne	.-4      	; 0x3fa <__vector_2+0x32>
+ 3fe:	00 c0       	rjmp	.+0      	; 0x400 <__LOCK_REGION_LENGTH__>
+ 400:	00 00       	nop
     _delay_ms(10); //button debounce
 }
- 33e:	9f 91       	pop	r25
- 340:	8f 91       	pop	r24
- 342:	0f 90       	pop	r0
- 344:	0f be       	out	0x3f, r0	; 63
- 346:	0f 90       	pop	r0
- 348:	1f 90       	pop	r1
- 34a:	18 95       	reti
+ 402:	9f 91       	pop	r25
+ 404:	8f 91       	pop	r24
+ 406:	0f 90       	pop	r0
+ 408:	0f be       	out	0x3f, r0	; 63
+ 40a:	0f 90       	pop	r0
+ 40c:	1f 90       	pop	r1
+ 40e:	18 95       	reti
 
-0000034c <_exit>:
- 34c:	f8 94       	cli
+00000410 <_exit>:
+ 410:	f8 94       	cli
 
-0000034e <__stop_program>:
- 34e:	ff cf       	rjmp	.-2      	; 0x34e <__stop_program>
+00000412 <__stop_program>:
+ 412:	ff cf       	rjmp	.-2      	; 0x412 <__stop_program>
