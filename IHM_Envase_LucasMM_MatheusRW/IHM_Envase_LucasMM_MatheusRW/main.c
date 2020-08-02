@@ -35,6 +35,7 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "util.h"
 
@@ -73,11 +74,17 @@
 
 #define PAUSE_BTN PIND,3
 #define PAUSE_INT INT1_vect
+
+/*--- Default Values ---*/
 #define FILL_DELAY_DEFAULT 500
+#define PWD_DEFAULT "1111"
+#define PWD_LEN (4)
+
 
 /*--------- predeclaration ---------*/
 typedef enum machineState {
     START = 0,
+    PWD,
     CONFIG,
     READY,
     RUN,
@@ -89,16 +96,20 @@ typedef enum runState {
     WAITING = 0, /*!< esperando caixas */
     DETECTED,    /*!< caixa detectada */
     LOADING,     /*!< despejando material */
-	CLOSING,     /*!< fecha CYL_C para poder liberar caixa */
+    CLOSING,     /*!< fecha CYL_C para poder liberar caixa */
     RELEASING,   /*!< libera caixa e recarrega compartimento interno */
 } runState_t;
+
+const char pwd_txt[] = "password:";
 
 /*--------- Globals ---------*/
 
 volatile machineState_t major_state = START;
 volatile runState_t run_state = WAITING;
 
-uint32_t fill_delay_ms = FILL_DELAY_DEFAULT;
+volatile uint32_t fill_delay_ms = FILL_DELAY_DEFAULT;
+
+char pwd_buff[PWD_LEN+1]= "\0";
 
 /*--------- Main ---------*/
 int main(void)
@@ -115,10 +126,10 @@ int main(void)
 
     sei();
 
-    lcd_4bit_init();//will configure it's own pins
+    lcd_4bit_init();
 
     lcd_write("Hello there!");
-
+    _delay_ms(500);
   while(1)
     {
         switch(major_state)
@@ -126,9 +137,55 @@ int main(void)
         case START:
             //TODO: chech initial state
             break;
+        case PWD:
+            lcd_clear();
+            lcd_move_cursor(0,0);
+            lcd_write(pwd_txt);
+            //draw * equivalent to the input password len
+            uint8_t curr_opt = 0;
+            uint8_t pwd_len = 0;
+            while(major_state == PWD)
+            {
+                lcd_move_cursor(pwd_len, 1);
+                lcd_cmd('0' + curr_opt, LCD_CMD);
+                if(get_bit(UP_BTN))
+                {
+                    curr_opt = curr_opt >= 9 ? 0 : curr_opt + 1;
+                    _delay_ms(50);
+                }
+                if(get_bit(DWN_BTN))
+                {
+                    curr_opt = curr_opt == 0 ? 9 : curr_opt - 1;
+                    _delay_ms(50);
+                }
+                if(get_bit(ENTR_BTN))
+                {
+                    if(pwd_len == 4)
+                    {
+                        if(strncmp(PWD_DEFAULT, pwd_buff, 4) == 0) //check password match
+                        {
+                            major_state = CONFIG;
+                            break;
+                        }
+                        else //wrong password
+                        {
+                            lcd_move_cursor(0, 1);
+                            lcd_write("wrong passwd");
+                            _delay_ms(500);
+                            lcd_move_cursor(0, 1);
+                            lcd_write("                ");
+                            pwd_len = 0;
+                        }
+                    }
+                    else
+                    {
+                        pwd_buff[pwd_len] = '0' + curr_opt;
+                    }
+                }
+            }
         case CONFIG:
-            //TODO: run user config (lcd dependant)
-        break;
+            //TODO: ask for lot size, fill_delay
+
         case READY:
 
             break;
@@ -175,6 +232,7 @@ int main(void)
             break;
         default:
         case ERROR:
+
 			//lcd_write("SYSTEM ERROR");
 			break;
         }
@@ -188,6 +246,7 @@ ISR(E_STOP_INTR) //Emergency stop button ISR
 	set_bit(CYL_B);
 	set_bit(CYL_C);
 	rst_bit(CYL_A);
+
    while(!get_bit(E_STOP_BTN)); //lock the machine while the emergency button is pressed
 }
 ISR(PAUSE_INT)

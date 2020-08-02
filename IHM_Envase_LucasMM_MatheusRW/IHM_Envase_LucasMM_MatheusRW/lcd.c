@@ -129,7 +129,7 @@ void lcd_cmd(unsigned char c, /*!< command to send */
 /**
    write a string to the display.
  */
-void lcd_write(char *str)
+void lcd_write(const char * str)
 {
     for (;*str;++str)
     {
