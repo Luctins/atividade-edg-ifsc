@@ -133,18 +133,18 @@ int main(void)
 
             break;
         case RUN:
-            switch(run_state) //TODO: prever casos impossíveis / erros, limpar lcd antes de escrever as coisas novas
+            switch(run_state) //TODO: prever casos impossíveis / erros, trocar lcd_clears por comando de mover cursor pro inicio do lcd
             {
             case WAITING:
                 lcd_clear();
-                //lcd_write("Waiting for next box");
+                lcd_write("Waiting next box");
                 if(get_bit(SNS_CX)==0) {
                     run_state = DETECTED;
                 }
                 break;
             case DETECTED:
                 lcd_clear();
-                //lcd_write("Box detected");
+                lcd_write("Box detected    ");
                 set_bit(CYL_A);
                 set_bit(CYL_B);
                 if(get_bit(A_1)==0 && get_bit(B_1)==0) {
@@ -152,30 +152,41 @@ int main(void)
                 }
                 break;
             case LOADING:
-				//lcd_write("Loading box");
+				lcd_clear();
+				lcd_write("Loading box     ");
 				rst_bit(CYL_C);
-				//_delay_ms(variable * 1000);  TODO: create variable for user-defined wait time (seconds)
-				if(get_bit(C_O)==0) run_state = RELEASING;
+				_delay_ms(fill_delay_ms);
+				if(get_bit(C_O)==0) {
+					run_state = RELEASING;
+				}
                 break;
 			case CLOSING:
-				//lcd_write("Closing dispenser");
+				lcd_clear();
+				lcd_write("Closing disp.   ");
 				set_bit(CYL_C);
-				if(get_bit(C_1)==0) run_state = RELEASING;
+				if(get_bit(C_1)==0) {
+					run_state = RELEASING;
+				}
 				break;
             case RELEASING:
-				//lcd_write("Releasing box");
+				lcd_clear();
+				lcd_write("Releasing box   ");
 				set_bit(CYL_A);
 				set_bit(CYL_B);
-				if(get_bit(A_1)==0 && get_bit(B_1)==0) run_state = LOADING;
+				if(get_bit(A_1)==0 && get_bit(B_1)==0) {
+					run_state = LOADING;
+				}
                 break;
             }
             break;
         case PAUSE:
-			//lcd_write("System paused...");
+			lcd_clear();
+			lcd_write("System paused...");
             break;
         default:
         case ERROR:
-			//lcd_write("SYSTEM ERROR");
+			lcd_clear();
+			lcd_write("SYSTEM ERROR");
 			break;
         }
     }
