@@ -54,11 +54,11 @@
 #define CYL_C PORTC,5
 
 
-#define A_O PINB,0
+#define A_0 PINB,0
 #define A_1 PINB,1
-#define B_O PINB,2
+#define B_0 PINB,2
 #define B_1 PINB,3
-#define C_O PINB,4
+#define C_0 PINB,4
 #define C_1 PINB,5
 
 #define SNS_CX PINB,6
@@ -141,12 +141,13 @@ int main(void)
     lcd_4bit_init();
 
     lcd_write("Hello there!");
-    _delay_ms(500);
+    _delay_ms(2000);
     while(1) {
         switch(major_state) {
         case START:
             //TODO: chech initial state
-            major_state = PWD;
+            major_state = RUN;
+            run_state = WAITING;
             break;
         case PWD:
             lcd_clear();
@@ -197,6 +198,12 @@ int main(void)
 
             break;
         case RUN:
+			;
+			//Segunda linha do LCD, status do lote:
+			char buff[17];
+			snprintf(buff,17, "Lot %02i, box %02i ",lot_number,lot_quantity+1);
+			lcd_move_cursor(0,1);
+			lcd_write(buff);
             //TODO: prever casos impossíveis / erros, trocar lcd_clears por comando de mover cursor pro inicio do lcd
             switch(run_state) {
             case WAITING:
@@ -220,8 +227,8 @@ int main(void)
                 lcd_write("Loading box    ");
                 rst_bit(CYL_C);
                 //_delay_ms(fill_delay_ms); TODO
-                if(get_bit(C_O)==0) {
-                    run_state = RELEASING;
+                if(get_bit(C_0)==0) {
+                    run_state = CLOSING;
                 }
                 break;
             case CLOSING:
@@ -235,11 +242,12 @@ int main(void)
             case RELEASING:
                 lcd_move_cursor(0,0);
                 lcd_write("Releasing box  ");
-                set_bit(CYL_A);
-                set_bit(CYL_B);
-                if(get_bit(A_1)==0 && get_bit(B_1)==0) {
+                rst_bit(CYL_A);
+                rst_bit(CYL_B);
+                if(get_bit(A_0)==0 && get_bit(B_0)==0) {
                     lcd_move_cursor(0,0);
                     lcd_write("Box finished   ");
+					_delay_ms(2000);
                     ++ lot_quantity; //Incrementa uma caixa no lote atual
                     if (lot_quantity == lot_size) //Se o lote atuala atingiu o número de caixas desejado
                     {
@@ -255,11 +263,6 @@ int main(void)
                     run_state = WAITING;
                 }
                 break;
-                //Segunda linha do LCD, status do lote:
-                char buff[17];
-                snprintf(buff,17, "Lot %02i, box %02i ",lot_number,lot_quantity+1);
-                lcd_move_cursor(0,1);
-                lcd_write(buff);
             }
             break;
         case PAUSE:
