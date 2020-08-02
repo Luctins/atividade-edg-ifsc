@@ -151,17 +151,17 @@ int main(void)
 
     lcd_4bit_init();
 
-    lcd_write("Hello there!");
+    lcd_write("Booting...     ");
     _delay_ms(2000);
     while(1) {
         switch(major_state) {
         case START:
-            major_state = PWD;
+            major_state = READY; //TODO: mudar depois que resolver o PWD
             run_state = WAITING;
             rst_bit(CYL_A);
-            set_bit(CYL_B);
+            rst_bit(CYL_B);
             set_bit(CYL_C);
-            if(get_bit(A_0) && get_bit(B_1) && get_bit(C_1)) {
+            if(get_bit(A_0)==0 && get_bit(B_1)==0 && get_bit(C_1)==0) {
                 major_state = PWD;
             }
             break;
@@ -217,6 +217,8 @@ int main(void)
 			major_state=READY;
 
         case READY:
+			lcd_move_cursor(0,0);
+			lcd_write("Ready press STR");
 			if (get_bit(STRT_STOP_BTN)==0)
 			{
 				major_state=RUN;
