@@ -66,9 +66,15 @@ typedef enum cmdType
     LCD_CMD = 0,
     LCD_CHAR
 } cmdType_t;
+
 void lcd_write(char *str);
 void lcd_4bit_init(void);
 void lcd_cmd(unsigned char c, cmdType_t type);
+
+inline void lcd_move_cursor(uint8_t l, uint8_t c)
+{
+    lcd_cmd(0x80 | ((l < 0x0f ? l : 0x0f )+(c > 0 ? 0x40 : 0)), LCD_CMD);
+}
 
 //void lcd_flash_write(const char * str);
 
