@@ -103,6 +103,8 @@ int main(void)
 {
     //configure interrupts
     EICRA |= 0b00001010; //set INT0 and INT1 as falling edge
+	
+//TODO: EIMSK??
 
     //set up pin directions
     DDRB = 0x00;
@@ -129,7 +131,7 @@ int main(void)
 
             break;
         case RUN:
-            switch(run_state) //TODO: prever casos impossíveis / erros
+            switch(run_state) //TODO: prever casos impossíveis / erros, limpar lcd antes de escrever as coisas novas
             {
             case WAITING:
 				//lcd_write("Waiting for next box");
@@ -161,12 +163,12 @@ int main(void)
             }
             break;
         case PAUSE:
-
+			//lcd_write("System paused...");
             break;
         default:
         case ERROR:
-
-        break;
+			//lcd_write("SYSTEM ERROR");
+			break;
         }
     }
 }
