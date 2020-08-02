@@ -146,6 +146,7 @@ int main(void)
         switch(major_state) {
         case START:
             //TODO: chech initial state
+            major_state = PWD;
             break;
         case PWD:
             lcd_clear();
