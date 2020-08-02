@@ -56,9 +56,9 @@
 /*--- Macros ---*/
 
 #define enable_pulse()                              \
-	_delay_us(1); set_bit(LCD_EN);                    \
-  _delay_us(1); rst_bit(LCD_EN);                    \
-  _delay_us(45)
+    _delay_us(1); set_bit(LCD_EN);                  \
+    _delay_us(1); rst_bit(LCD_EN);                  \
+    _delay_us(45)
 
 /*--------- Prototype dec ---------*/
 typedef enum cmdType

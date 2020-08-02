@@ -46,21 +46,23 @@
 */
 void lcd_4bit_init(void)
 {
-    /* wait for VCC to stabilize */
-    _delay_ms(20);
 
     /* reset lcd port bits and set RS low */
-    LCD_PORT &= 0x0f;
+    //LCD_PORT &= 0x0f;
     rst_bit(LCD_RS);
+    rst_bit(LCD_EN);
+
+    /* wait for VCC to stabilize */
+    _delay_ms(20);
 
     /**
        LCD startup sequence following the datasheet for 4 bits (page 46)
        @see https://www.sparkfun.com/datasheets/LCD/HD44780.pdf
     */
-#if USE_LOWER_NIBLE
-    LCD_PORT |= 0x03;
+#if USE_LOWER_NIBLE == 1
+    LCD_PORT = (LCD_PORT & 0xf0) | 0x03;
 #else
-    LCD_PORT |= 0x30;
+    LCD_PORT = (LCD_PORT & 0x0f) | 0x30;
 #endif
     enable_pulse();
     _delay_ms(5);
@@ -69,18 +71,18 @@ void lcd_4bit_init(void)
     enable_pulse();
 
 #if USE_LOWER_NIBLE
-    LCD_PORT |= 0x02;
+    LCD_PORT = (LCD_PORT & 0xf0) | 0x02;
 #else
-    LCD_PORT |= 0x20;
+    LCD_PORT = (LCD_PORT & 0x0f) | 0x20;
 #endif
     enable_pulse();
-    enable_pulse();
+
 
     /* set interface 4 bits, 2 lines, 8 dots font  */
     lcd_cmd(0b00101000,LCD_CMD);
     lcd_cmd(0x08,LCD_CMD); // turn off display
     lcd_cmd(0x01,LCD_CMD); // clear display
-    lcd_cmd(0b00001110,LCD_CMD); // turn displ. on, visible cursor, no blink
+    lcd_cmd(0x0c,LCD_CMD); // turn displ. on, visible cursor, no blink
     lcd_cmd(0x80,LCD_CMD); //set CGRAM adress to 0 (1st position)
 }
 
@@ -100,27 +102,28 @@ void lcd_cmd(unsigned char c, /*!< command to send */
     }
 
     /*send first nibble (high half) of data*/
-#if USE_LOWER_NIBLE
-    LCD_PORT |= (c & 0xf0) >> 4;
+#if USE_LOWER_NIBLE == 1
+    LCD_PORT = (LCD_PORT & 0xf0) | ((c & 0xf0) >> 4);
 #else
-    LCD_PORT |= (c & 0xf0);
+    LCD_PORT = (LCD_PORT & 0x0f) | (c & 0xf0);
 #endif
     enable_pulse();
 
     /*send second (lower) nibble of data*/
-#if USE_LOWER_NIBLE
-    LCD_PORT |= (c & 0x0f);
+#if USE_LOWER_NIBLE == 1
+    LCD_PORT = (LCD_PORT & 0xf0) | (c & 0x0f);
 #else
-    LCD_PORT |= (c & 0x0f) << 4;
+    LCD_PORT = (LCD_PORT & 0x0f) | ((c & 0x0f) << 4);
 #endif
     enable_pulse();
 
     //wait if cmd is clear or return home (exec time ~1.52ms)
-    if(c<4)
+    if(c<4 && cmd == LCD_CMD)
     {
         _delay_ms(2);
     }
-    set_bit(LCD_RS);
+    //set_bit(LCD_RS);
+    LCD_PORT &= ~(LCD_DATA_MASK);
 }
 
 /**
@@ -128,7 +131,10 @@ void lcd_cmd(unsigned char c, /*!< command to send */
  */
 void lcd_write(char *str)
 {
-    for (;*str;++str) lcd_cmd(*str,LCD_CHAR);
+    for (;*str;++str)
+    {
+        lcd_cmd(*str,LCD_CHAR);
+    }
 }
 
 #if 0
