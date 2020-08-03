@@ -328,12 +328,19 @@ int main(void)
                 }
                 break;
             case LOADING:
-                lcd_move_cursor(0,0);
-                lcd_write("Loading box    ");
                 rst_bit(CYL_C);
-                //_delay_ms(fill_delay_ms); TODO
+				lcd_move_cursor(0,0);
+				lcd_write("Loading box... ");
                 if(get_bit(C_0)==0) {
                     run_state = CLOSING;
+					lcd_move_cursor(0,0);
+					lcd_write("Applying delay ");
+					for(int i =0; i<fill_delay_ms/10; ++i)
+					{
+						_delay_ms(10);
+					}
+					lcd_move_cursor(0,0);
+					lcd_write("Box loaded     ");
                 }
                 break;
             case CLOSING:
