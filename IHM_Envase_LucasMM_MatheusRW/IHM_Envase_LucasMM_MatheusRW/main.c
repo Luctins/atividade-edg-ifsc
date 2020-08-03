@@ -158,6 +158,7 @@ int main(void)
 	_delay_ms(200);
 	lcd_write(".");
 	_delay_ms(200);
+	
     while(1) {
         switch(major_state) {
         case START:
@@ -209,9 +210,6 @@ int main(void)
                             lcd_move_cursor(0, 1);
                             lcd_write("Wrong passwd");
                             _delay_ms(1000);
-                            lcd_clear();
-                            lcd_write("dumb mtfckr");
-                            _delay_ms(100);
                             lcd_clear();
                             lcd_move_cursor(0, 1);
                             memcpy(pwd_buff, "0   \0", 5);
@@ -265,10 +263,11 @@ int main(void)
             } while(!ok);
             ok = 0;
             char fill_delay = 1;
+			lcd_clear();
             do
             {
                 lcd_move_cursor(0,0);
-                lcd_write("delay:");
+                lcd_write("Delay:");
                 lcd_move_cursor(0, 1);
                 snprintf(n_buff, 5, "%02i s", fill_delay);
                 lcd_write(n_buff);
@@ -296,10 +295,10 @@ int main(void)
                     while(!get_bit(ENTR_BTN)); //wait for button release
                 }
             } while(!ok);
-
+			lcd_clear();
             major_state=READY;
         case READY:
-            lcd_move_cursor(0,0);
+			lcd_move_cursor(0,0);
             lcd_write("Ready press STR");
             if (get_bit(STRT_STOP_BTN)==0)
             {
@@ -383,12 +382,12 @@ int main(void)
             lcd_write("SYSTEM ERROR");
             break;
         }
-
-    }
-	//Situações impossíveis dos cilindros:
-	if ((A_0 == 0 && A_1 == 1)||(B_0 == 0 && B_1 == 1)||(C_0 == 0 && C_1 == 1)||(B_0==0 && C_0 == 0)) 
-	{//Se os dois sensores de um cilindro estiverem acionados ao mesmo tempo, ou se B e C estiverem abertos ao mesmo tempo (vazamento)
-		major_state = ERROR;
+		//Situações impossíveis dos cilindros:
+		if ((get_bit(A_0) == 0 && get_bit(A_1) == 0)||(get_bit(B_0) == 0 && get_bit(B_1) == 0)
+			||(get_bit(C_0) == 0 && get_bit(C_1) == 0)||(get_bit(B_0)==0 && get_bit(C_0) == 0)) 
+		{//Se os dois sensores de um cilindro estiverem acionados ao mesmo tempo, ou se B e C estiverem abertos ao mesmo tempo (vazamento)
+			major_state = ERROR;
+		}
 	}
 }
 
