@@ -364,6 +364,7 @@ int main(void)
                         lcd_move_cursor(0,0);
                         lcd_write("Start next lot ");
                         _delay_ms(1000);
+						major_state = READY;
                     }
                     run_state = WAITING;
                 }
@@ -376,6 +377,9 @@ int main(void)
             break;
         default:
         case ERROR:
+			rst_bit(CYL_A);
+			rst_bit(CYL_B);
+			set_bit(CYL_C);
             lcd_clear();
             lcd_write("SYSTEM ERROR");
             break;
@@ -399,7 +403,7 @@ int main(void)
 ISR(E_STOP_INTR) //Emergency stop button ISR
 {
     major_state = ERROR;
-    set_bit(CYL_B);
+    rst_bit(CYL_B);
     set_bit(CYL_C);
     rst_bit(CYL_A);
 
