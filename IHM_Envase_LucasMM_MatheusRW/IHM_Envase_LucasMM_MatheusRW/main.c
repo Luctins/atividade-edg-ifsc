@@ -150,8 +150,14 @@ int main(void)
 
     lcd_4bit_init();
 
-    lcd_write("Booting...     ");
-    _delay_ms(2000);
+    lcd_write("Booting");
+    _delay_ms(200);
+	lcd_write(".");
+	_delay_ms(200);
+	lcd_write(".");
+	_delay_ms(200);
+	lcd_write(".");
+	_delay_ms(200);
     while(1) {
         switch(major_state) {
         case START:
@@ -379,6 +385,11 @@ int main(void)
         }
 
     }
+	//Situações impossíveis dos cilindros:
+	if ((A_0 == 0 && A_1 == 1)||(B_0 == 0 && B_1 == 1)||(C_0 == 0 && C_1 == 1)||(B_0==0 && C_0 == 0)) 
+	{//Se os dois sensores de um cilindro estiverem acionados ao mesmo tempo, ou se B e C estiverem abertos ao mesmo tempo (vazamento)
+		major_state = ERROR;
+	}
 }
 
 /*--------- Interrupts ---------*/

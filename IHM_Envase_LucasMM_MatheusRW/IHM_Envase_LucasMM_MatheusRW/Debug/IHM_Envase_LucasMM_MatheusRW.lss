@@ -458,8 +458,8 @@ int main(void)
 
 	__builtin_avr_delay_cycles(__ticks_dc);
  250:	2f ef       	ldi	r18, 0xFF	; 255
- 252:	37 ea       	ldi	r19, 0xA7	; 167
- 254:	81 e6       	ldi	r24, 0x61	; 97
+ 252:	33 ed       	ldi	r19, 0xD3	; 211
+ 254:	80 e3       	ldi	r24, 0x30	; 48
  256:	21 50       	subi	r18, 0x01	; 1
  258:	30 40       	sbci	r19, 0x00	; 0
  25a:	80 40       	sbci	r24, 0x00	; 0
@@ -517,7 +517,7 @@ int main(void)
     lcd_4bit_init();
 
     lcd_write("Booting...     ");
-    _delay_ms(2000);
+    _delay_ms(1000);
     while(1) {
         switch(major_state) {
  292:	80 91 25 02 	lds	r24, 0x0225	; 0x800225 <major_state>
@@ -1081,6 +1081,7 @@ inline void lcd_move_cursor(uint8_t c, uint8_t l)
  604:	46 ce       	rjmp	.-884    	; 0x292 <main+0x7e>
 
 00000606 <__vector_1>:
+	}
 }
 
 /*--------- Interrupts ---------*/
