@@ -1,7 +1,7 @@
 /**
 
    -----------------------------------------------------------------------------
-   Copyright (c) 2020 Lucas Martins Mendes.
+   Copyright (c) 2020 Lucas Martins Mendes & Matheus Reibnitz Willemann.
    All rights reserved.
 
    Redistribution and use in source and binary forms are permitted
@@ -17,7 +17,7 @@
    IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-   @author Lucas Martins Mendes, ,  Matheus Reibnitz Willemann
+   @author Lucas Martins Mendes,  Matheus Reibnitz Willemann
    @file   lcd.h
    @date   07/31/20
    @brief Adaptado do Material do professor Valdir Noll,
