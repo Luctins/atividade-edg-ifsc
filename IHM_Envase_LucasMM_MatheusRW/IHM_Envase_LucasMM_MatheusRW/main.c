@@ -156,25 +156,28 @@ int main(void)
     while(1) {
         switch(major_state) {
         case START:
-            major_state = READY; //TODO: mudar depois que resolver o PWD
+            //major_state = READY; //TODO: mudar depois que resolver o PWD
             run_state = WAITING;
             rst_bit(CYL_A);
             rst_bit(CYL_B);
             set_bit(CYL_C);
-            if(get_bit(A_0)==0 && get_bit(B_1)==0 && get_bit(C_1)==0) {
+			lcd_move_cursor(0,0);
+			lcd_write("Wait start pos.");
+            if(!(get_bit(A_0) || get_bit(B_0) || get_bit(C_1))) {
                 major_state = PWD;
             }
             break;
         case PWD:
             lcd_clear();
-            lcd_move_cursor(0,0);
-            lcd_write(pwd_txt);
+            
             //draw * equivalent to the input password len
             uint8_t curr_opt = 0;
             uint8_t pwd_pos = 0;
             memcpy(pwd_buff, "0   \0", 5);
             while(1)
             {
+				lcd_move_cursor(0,0);
+				lcd_write(pwd_txt);
                 lcd_move_cursor(0, 1);
                 pwd_buff[pwd_pos] = '0' + curr_opt;
                 lcd_write(pwd_buff);
@@ -191,18 +194,23 @@ int main(void)
                     _delay_ms(50);
                     while(!get_bit(DWN_BTN)); //wait button release
                 } else if (!get_bit(ENTR_BTN)) {
-                    if(pwd_pos == 4)
+                    if(pwd_pos == PWD_LEN-1)
                     {
                         //check password match
                         if(strncmp(PWD_DEFAULT, pwd_buff, 4) == 0) {
                             major_state = CONFIG;
+							lcd_clear();
                             break;
                         }
                         //wrong password
                         else {
                             lcd_move_cursor(0, 1);
-                            lcd_write("wrong passwd");
-                            _delay_ms(500);
+                            lcd_write("Wrong passwd");
+                            _delay_ms(1000);
+							lcd_clear();
+							lcd_write("dumb mtfckr");
+							_delay_ms(100);
+							lcd_clear();
                             lcd_move_cursor(0, 1);
                             memcpy(pwd_buff, "0   \0", 5);
                             pwd_pos = 0;
@@ -217,7 +225,8 @@ int main(void)
                 }
             }
         case CONFIG:
-            lcd_write("conf. param.")
+			lcd_move_cursor(0,0);
+            lcd_write("Conf. param.");
             //TODO: ask for lot size, fill_delay
             major_state=READY;
         case READY:
