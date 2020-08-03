@@ -111,20 +111,19 @@ const char pwd_txt[] = "Password:";
 
 
 /*
-static void drawIdle()
-{
-    const char * l = "|/-\\";
-    static char * c = l;
+  static void drawIdle()
+  {
+  const char * l = "|/-\\";
+  static char * c = l;
 
-    lcd_move_cursor(0xf, 0);
-    lcd_cmd(*c, cmdType_t type);
-        }
+  lcd_move_cursor(0xf, 0);
+  lcd_cmd(*c, cmdType_t type);
+  }
 */
 /*--------- Globals ---------*/
 
 volatile machineState_t major_state = START;
 volatile runState_t run_state = WAITING;
-
 
 volatile uint32_t fill_delay_ms = FILL_DELAY_DEFAULT;
 
@@ -146,8 +145,8 @@ int main(void)
     DDRB = 0x00;
     DDRC = 0b00111000;
     DDRD = 0b11110011;
-
-    sei();
+    __asm__("sei;");
+    //sei();
 
     lcd_4bit_init();
 
@@ -156,28 +155,25 @@ int main(void)
     while(1) {
         switch(major_state) {
         case START:
-            //major_state = READY; //TODO: mudar depois que resolver o PWD
             run_state = WAITING;
             rst_bit(CYL_A);
             rst_bit(CYL_B);
             set_bit(CYL_C);
-			lcd_move_cursor(0,0);
-			lcd_write("Wait start pos.");
+            lcd_move_cursor(0,0);
+            lcd_write("Wait start pos.");
             if(!(get_bit(A_0) || get_bit(B_0) || get_bit(C_1))) {
                 major_state = PWD;
             }
             break;
         case PWD:
             lcd_clear();
-            
-            //draw * equivalent to the input password len
             uint8_t curr_opt = 0;
             uint8_t pwd_pos = 0;
             memcpy(pwd_buff, "0   \0", 5);
             while(1)
             {
-				lcd_move_cursor(0,0);
-				lcd_write(pwd_txt);
+                lcd_move_cursor(0,0);
+                lcd_write(pwd_txt);
                 lcd_move_cursor(0, 1);
                 pwd_buff[pwd_pos] = '0' + curr_opt;
                 lcd_write(pwd_buff);
@@ -199,7 +195,7 @@ int main(void)
                         //check password match
                         if(strncmp(PWD_DEFAULT, pwd_buff, 4) == 0) {
                             major_state = CONFIG;
-							lcd_clear();
+                            lcd_clear();
                             break;
                         }
                         //wrong password
@@ -207,10 +203,10 @@ int main(void)
                             lcd_move_cursor(0, 1);
                             lcd_write("Wrong passwd");
                             _delay_ms(1000);
-							lcd_clear();
-							lcd_write("dumb mtfckr");
-							_delay_ms(100);
-							lcd_clear();
+                            lcd_clear();
+                            lcd_write("dumb mtfckr");
+                            _delay_ms(100);
+                            lcd_clear();
                             lcd_move_cursor(0, 1);
                             memcpy(pwd_buff, "0   \0", 5);
                             pwd_pos = 0;
@@ -225,26 +221,92 @@ int main(void)
                 }
             }
         case CONFIG:
-			lcd_move_cursor(0,0);
+            lcd_move_cursor(0,0);
             lcd_write("Conf. param.");
-            //TODO: ask for lot size, fill_delay
+            _delay_ms(500);
+            lcd_clear();
+            char n_buff[5];
+            char ok = 0;
+            do
+            {
+                lcd_move_cursor(0,0);
+                lcd_write("Cycle Count:");
+                lcd_move_cursor(0, 1);
+                snprintf(n_buff, 4, "%02i", lot_size);
+                lcd_write(n_buff);
+
+                while(get_bit(UP_BTN) && get_bit(DWN_BTN) && get_bit(ENTR_BTN)) {
+                    //draw_idle();
+                }
+                // increment lot amount
+                if(!get_bit(UP_BTN)) {
+                    lot_size = lot_size >= 24 ? 1 : lot_size + 1;
+                    _delay_ms(50);
+                    while(!get_bit(UP_BTN)); //wait button release
+                }
+                //decrement lot size
+                else if (!get_bit(DWN_BTN)) {
+                    lot_size = lot_size == 1 ? 24 : lot_size - 1;
+                    _delay_ms(50);
+                    while(!get_bit(DWN_BTN)); //wait button release
+                }
+                //confirm
+                else if (!get_bit(ENTR_BTN)) {
+                    ok = 1;
+                    _delay_ms(50);
+                    while(!get_bit(ENTR_BTN)); //wait for button release
+                }
+            } while(!ok);
+            ok = 0;
+            char fill_delay = 1;
+            do
+            {
+                lcd_move_cursor(0,0);
+                lcd_write("delay:");
+                lcd_move_cursor(0, 1);
+                snprintf(n_buff, 5, "%02i s", fill_delay);
+                lcd_write(n_buff);
+
+                while(get_bit(UP_BTN) && get_bit(DWN_BTN) && get_bit(ENTR_BTN)) {
+                    //draw_idle();
+                }
+                // increment lot amount
+                if(!get_bit(UP_BTN)) {
+                    fill_delay = fill_delay >= 99 ? 1 : fill_delay + 1;
+                    _delay_ms(50);
+                    while(!get_bit(UP_BTN)); //wait button release
+                }
+                //decrement lot size
+                else if (!get_bit(DWN_BTN)) {
+                    fill_delay = fill_delay == 1 ? 99 : fill_delay - 1;
+                    _delay_ms(50);
+                    while(!get_bit(DWN_BTN)); //wait button release
+                }
+                //confirm
+                else if (!get_bit(ENTR_BTN)) {
+                    ok = 1;
+                    fill_delay_ms = 1000 * fill_delay;
+                    _delay_ms(50);
+                    while(!get_bit(ENTR_BTN)); //wait for button release
+                }
+            } while(!ok);
+
             major_state=READY;
         case READY:
-			lcd_move_cursor(0,0);
-			lcd_write("Ready press STR");
-			if (get_bit(STRT_STOP_BTN)==0)
-			{
-				major_state=RUN;
-			}
+            lcd_move_cursor(0,0);
+            lcd_write("Ready press STR");
+            if (get_bit(STRT_STOP_BTN)==0)
+            {
+                major_state=RUN;
+            }
             break;
         case RUN:
-			;
-			//Segunda linha do LCD, status do lote:
-			char buff[17];
-			snprintf(buff,17, "Lot %02i, box %02i ",lot_number,lot_quantity+1);
-			lcd_move_cursor(0,1);
-			lcd_write(buff);
-            //TODO: prever casos impossíveis / erros, trocar lcd_clears por comando de mover cursor pro inicio do lcd
+            ;
+            //Segunda linha do LCD, status do lote:
+            char buff[17];
+            snprintf(buff,17, "Lot %02i, box %02i ",lot_number,lot_quantity+1);
+            lcd_move_cursor(0,1);
+            lcd_write(buff);
             switch(run_state) {
             case WAITING:
                 lcd_move_cursor(0,0);
@@ -287,9 +349,9 @@ int main(void)
                 if(get_bit(A_0)==0 && get_bit(B_0)==0) {
                     lcd_move_cursor(0,0);
                     lcd_write("Box finished   ");
-					_delay_ms(2000);
+                    _delay_ms(2000);
                     ++ lot_quantity; //Incrementa uma caixa no lote atual
-                    if (lot_quantity == lot_size) //Se o lote atuala atingiu o número de caixas desejado
+                    if (lot_quantity == lot_size) //Se o lote atual atingiu o número de caixas desejado
                     {
                         ++ lot_number; //Incrementa número de lotes prontos
                         lot_quantity = 0; //Reinicia contagem de caixas no lote
@@ -315,6 +377,7 @@ int main(void)
             lcd_write("SYSTEM ERROR");
             break;
         }
+
     }
 }
 
