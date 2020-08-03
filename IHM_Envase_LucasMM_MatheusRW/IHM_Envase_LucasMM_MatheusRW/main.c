@@ -172,9 +172,11 @@ int main(void)
             //draw * equivalent to the input password len
             uint8_t curr_opt = 0;
             uint8_t pwd_pos = 0;
+            memcpy(pwd_buff, "0   \0", 5);
             while(1)
             {
                 lcd_move_cursor(0, 1);
+                pwd_buff[pwd_pos] = '0' + curr_opt;
                 lcd_write(pwd_buff);
                 while(get_bit(UP_BTN) && get_bit(DWN_BTN) && get_bit(ENTR_BTN)) {
                     //draw_idle();
@@ -183,9 +185,11 @@ int main(void)
                 if(!get_bit(UP_BTN)) {
                     curr_opt = curr_opt >= 9 ? 0 : curr_opt + 1;
                     _delay_ms(50);
+                    while(!get_bit(UP_BTN)); //wait button release
                 } else if (!get_bit(DWN_BTN)) {
                     curr_opt = curr_opt == 0 ? 9 : curr_opt - 1;
                     _delay_ms(50);
+                    while(!get_bit(DWN_BTN)); //wait button release
                 } else if (!get_bit(ENTR_BTN)) {
                     if(pwd_pos == 4)
                     {
@@ -200,21 +204,22 @@ int main(void)
                             lcd_write("wrong passwd");
                             _delay_ms(500);
                             lcd_move_cursor(0, 1);
-                            lcd_write("                ");
+                            memcpy(pwd_buff, "0   \0", 5);
                             pwd_pos = 0;
                         }
                     }
                     else {
-                        pwd_buff[pwd_pos] = '0' + curr_opt;
-                        ++curr_opt;
+                        //pwd_buff[pwd_pos] = '0' + curr_opt;
+                        ++pwd_pos;
                     }
+                    while(!get_bit(ENTR_BTN)); //wait for button release
                     _delay_ms(50);
                 }
             }
         case CONFIG:
+            lcd_write("conf. param.")
             //TODO: ask for lot size, fill_delay
-			major_state=READY;
-
+            major_state=READY;
         case READY:
 			if (get_bit(STRT_STOP_BTN)==0)
 			{
