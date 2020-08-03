@@ -152,13 +152,13 @@ int main(void)
 
     lcd_write("Booting");
     _delay_ms(200);
-	lcd_write(".");
-	_delay_ms(200);
-	lcd_write(".");
-	_delay_ms(200);
-	lcd_write(".");
-	_delay_ms(200);
-	
+    lcd_write(".");
+    _delay_ms(200);
+    lcd_write(".");
+    _delay_ms(200);
+    lcd_write(".");
+    _delay_ms(200);
+
     while(1) {
         switch(major_state) {
         case START:
@@ -263,9 +263,8 @@ int main(void)
             } while(!ok);
             ok = 0;
             char fill_delay = 1;
-			lcd_clear();
-            do
-            {
+            lcd_clear();
+            do {
                 lcd_move_cursor(0,0);
                 lcd_write("Delay:");
                 lcd_move_cursor(0, 1);
@@ -295,13 +294,12 @@ int main(void)
                     while(!get_bit(ENTR_BTN)); //wait for button release
                 }
             } while(!ok);
-			lcd_clear();
+            lcd_clear();
             major_state=READY;
         case READY:
-			lcd_move_cursor(0,0);
+            lcd_move_cursor(0,0);
             lcd_write("Ready press STR");
-            if (get_bit(STRT_STOP_BTN)==0)
-            {
+            if (get_bit(STRT_STOP_BTN)==0) {
                 major_state=RUN;
             }
             break;
@@ -382,13 +380,19 @@ int main(void)
             lcd_write("SYSTEM ERROR");
             break;
         }
-		//Situações impossíveis dos cilindros:
-		if ((get_bit(A_0) == 0 && get_bit(A_1) == 0)||(get_bit(B_0) == 0 && get_bit(B_1) == 0)
-			||(get_bit(C_0) == 0 && get_bit(C_1) == 0)||(get_bit(B_0)==0 && get_bit(C_0) == 0)) 
-		{//Se os dois sensores de um cilindro estiverem acionados ao mesmo tempo, ou se B e C estiverem abertos ao mesmo tempo (vazamento)
-			major_state = ERROR;
-		}
-	}
+        /*
+          Situações impossíveis dos cilindros:
+          Se os dois sensores de um cilindro estiverem acionados ao mesmo tempo,
+          ou se B e C estiverem abertos ao mesmo tempo (vazamento)
+        */
+        if ((get_bit(A_0) == 0 && get_bit(A_1) == 0) ||
+            (get_bit(B_0) == 0 && get_bit(B_1) == 0) ||
+            (get_bit(C_0) == 0 && get_bit(C_1) == 0) ||
+            (get_bit(B_0)==0 && get_bit(C_0) == 0)) {
+
+            major_state = ERROR;
+        }
+    }
 }
 
 /*--------- Interrupts ---------*/
