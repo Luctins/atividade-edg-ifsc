@@ -151,8 +151,14 @@ int main(void)
 
     lcd_4bit_init();
 
-    lcd_write("Booting...     ");
-    _delay_ms(1000);
+    lcd_write("Booting");
+    _delay_ms(200);
+	lcd_write(".");
+	_delay_ms(200);
+	lcd_write(".");
+	_delay_ms(200);
+	lcd_write(".");
+	_delay_ms(200);
     while(1) {
         switch(major_state) {
         case START:
