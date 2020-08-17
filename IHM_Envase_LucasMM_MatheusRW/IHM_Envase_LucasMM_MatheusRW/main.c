@@ -14,6 +14,7 @@
    prior written permission.
    THIS SOFTWARE IS PROVIDED ''AS IS'' AND WITHOUT ANY EXPRESS OR
    IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+
    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
    @author Lucas Martins Mendes &  Matheus Reibnitz  Willemann
@@ -331,7 +332,7 @@ int main(void)
                 lcd_move_cursor(0,0);
                 lcd_write("Loading box    ");
                 rst_bit(CYL_C);
-                //_delay_ms(fill_delay_ms); TODO
+                _delay_ms(fill_delay_ms);
                 if(get_bit(C_0)==0) {
                     run_state = CLOSING;
                 }
