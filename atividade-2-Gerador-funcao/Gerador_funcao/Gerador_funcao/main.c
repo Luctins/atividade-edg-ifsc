@@ -19,7 +19,7 @@
 
    @author Lucas Martins Mendes &  Matheus Reibnitz  Willemann
    @file   main.c
-   @date   ter abr 28 15:47:01 -03 2020
+   @date   Sun 30 Aug 16:44:10 -03 2020
    @brief  Atividade desenvolvida para a disciplina de Eletrônica Digital 2
 
    @see https://mil.ufl.edu/3744/docs/lcdmanual/commands.html
@@ -35,18 +35,17 @@
 #include <util/delay.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
+
 #include <stdint.h>
 
 #include <stdio.h>
 #include <string.h>
 
-
 #include "util.h"
 
-#include "lcd.h"
 
 /*--------- Macros ---------*/
-
+#define set_2byte_reg(val, reg) reg ## H = (val >> 8); reg ## L = (val & 0xff);
 /*--------- Constants ---------*/
 
 /*--- pins ---*/
@@ -64,6 +63,21 @@
 #define LED_RUN PORTC,2
 
 /*--------- predeclaration ---------*/
+void timer1_set_period_us(uint16_t t_us);
+
+/**
+  Stop timer 1.
+  @return void
+*/
+inline void timer1_stop(void) { set_reg(TCCR1B, 0x07, 0x00); }
+
+/**
+  Start timer 1 with prescaler of 1.
+  @return void
+*/
+inline void timer1_start(void) { set_reg(TCCR1B, 0x07, 0x01); }
+
+/*--- Types ---*/
 typedef enum machineState {
     STOP = 0,
     RUN,
@@ -77,14 +91,23 @@ typedef enum cmd {
     CMD_HLP  = 'h'
 } cmd_t;
 
-typedef enum wave_type {
+typedef enum waveType {
     WAVE_SINE = 's', /*!< Sine wave */
     WAVE_SQRE = 'q', /*!< Square wave */
     WAVE_SWTT = 'w', /*!< sawtooth */
     WAVE_TRGL = 't'  /*!< trianglew */
-} wave_type_t;
+} waveType_t;
 
 /*--------- Globals ---------*/
+static uint8_t wave_value = 0;
+static waveType_t wave_type;
+static uint8_t sine_lut[] =
+{ 127, 135, 143, 151, 159, 166, 174, 181, 188, 195, 202, 208, 214, 220, 225,
+  230, 235, 239, 242, 246, 248, 250, 252, 253, 254, 255, 254, 253, 252, 250,
+  248, 246, 242, 239, 235, 230, 225, 220, 214, 208, 202, 195, 188, 181, 174,
+  166, 159, 151, 143, 135, 127, 119, 111, 103, 95, 88, 80, 73, 66, 59, 52,
+  46, 40, 34, 29, 24, 19, 15, 12, 8, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 8, 12,
+  15, 19, 24, 29, 34, 40, 46, 52, 59, 66, 73, 80, 88, 95, 103, 111, 119 };
 
 /*--------- Main ---------*/
 int main(void)
@@ -94,6 +117,13 @@ int main(void)
     DDRC = 0x07;
     DDRD = 0xff;
 
+    //TODO: Configure serial
+    
+    //configure timer 1
+    TCCR1A = 0b00000000; //timer in normal mode, no PWM modes
+    TIMSK1 = 0x02; //enable Interrupt for OC1A
+
+    //enable interrupts
     __asm__("sei;");
 
     /* DO NOT TOUCH ABOVE THIS */
@@ -107,20 +137,29 @@ int main(void)
 }
 
 /*--------- Interrupts ---------*/
-ISR(E_STOP_INTR) //Emergency stop button ISR
+ISR(TIMER1_CMPA_vect)
 {
-    major_state = ERROR;
-    rst_bit(CYL_B);
-    set_bit(CYL_C);
-    rst_bit(CYL_A);
+    //reset timer value
+    set_2byte_reg(0x0000, TCNT1);
 
-    while(!get_bit(E_STOP_BTN)); //lock the machine while the emergency button is pressed
+    switch(wave_type) {
+    case WAVE_SINE:
+
+    
+    default:
+        return;
+    }
 }
-ISR(PAUSE_INT)
-{
-    major_state = (major_state == RUN ? PAUSE : (major_state ==  PAUSE ? RUN : major_state));
-    _delay_ms(10); //button debounce
-}
+
 /*--------- Function definition ---------*/
-
+void timer1_set_period_us(uint16_t t_us)
+{
+    //test for greatest period that fits in OCreg
+    t_us = t_us > 16000 ? 16000 : t_us;
+    uint16_t OCval = t_us*16;
+    //set output compare high and low byte
+    set_2byte_reg(OCval, OCR1A);
+    //OCR1AH = (OCVal >> 8);
+    //OCR1AL = (OCval & 0xff);
+}
 /*--------- EOF ---------*/
