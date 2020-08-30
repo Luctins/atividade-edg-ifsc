@@ -86,6 +86,8 @@ typedef enum wave_type {
 
 /*--------- Globals ---------*/
 machineState_t major_state = STOP;
+UBRR0 = (F_CPU / (16 * 115200) - 1) //p/ Modo Normal Assíncrono; 115200 = taxa de transmissão
+
 /*--------- Main ---------*/
 int main(void)
 {
