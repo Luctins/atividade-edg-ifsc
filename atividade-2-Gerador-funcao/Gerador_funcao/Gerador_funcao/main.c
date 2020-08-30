@@ -109,6 +109,10 @@ static uint8_t sine_lut[] =
   46, 40, 34, 29, 24, 19, 15, 12, 8, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 8, 12,
   15, 19, 24, 29, 34, 40, 46, 52, 59, 66, 73, 80, 88, 95, 103, 111, 119 };
 
+
+machineState_t major_state = STOP;
+
+
 /*--------- Main ---------*/
 int main(void)
 {
@@ -118,6 +122,7 @@ int main(void)
     DDRD = 0xff;
 
     //TODO: Configure serial
+    UBRR0 = (F_CPU / (16 * 115200) - 1) //p/ Modo Normal Assíncrono; 115200 = taxa de transmissão
     
     //configure timer 1
     TCCR1A = 0b00000000; //timer in normal mode, no PWM modes
@@ -127,9 +132,24 @@ int main(void)
     __asm__("sei;");
 
     /* DO NOT TOUCH ABOVE THIS */
+	set_bit(LED_ON);
     while(1) {
         switch(major_state) {
-        
+			case STOP:
+				rst_bit(LED_RUN);
+				rst_bit(LED_ERR);
+				
+			break;
+			case RUN:
+				set_bit(LED_RUN);
+				rst_bit(LED_ERR);
+				
+			break;
+			case ERROR:
+				set_bit(LED_ERR);
+				rst_bit(LED_RUN);
+				
+			break;
         }
  
     }
