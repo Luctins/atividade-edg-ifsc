@@ -45,7 +45,9 @@
 
 
 /*--------- Macros ---------*/
+
 #define set_2byte_reg(val, reg) reg ## H = (val >> 8); reg ## L = (val & 0xff);
+
 /*--------- Constants ---------*/
 
 /*--- pins ---*/
@@ -57,14 +59,16 @@
 #define DAC5 PORTB,5
 #define DAC6 PORTB,6
 #define DAC7 PORTB,7
+#define DAC_PORT PORTB
 
 #define LED_ERR PORTC,0
 #define LED_ON  PORTC,1
 #define LED_RUN PORTC,2
 
 /*--------- predeclaration ---------*/
-void timer1_set_period_us(uint16_t t_us);
 
+/*--- Timer 1 ---*/
+void timer1_set_period_us(uint16_t t_us);
 /**
   Stop timer 1.
   @return void
@@ -76,6 +80,14 @@ inline void timer1_stop(void) { set_reg(TCCR1B, 0x07, 0x00); }
   @return void
 */
 inline void timer1_start(void) { set_reg(TCCR1B, 0x07, 0x01); }
+
+/*--- Serial ---*/
+void serial_send(unsigned char * buff);
+void serial_init(void);
+void show_status(void);
+
+/*--- Others ---*/
+void parse_cmd(unsigned char * _cmd_buff);
 
 /*--- Types ---*/
 typedef enum machineState {
@@ -95,12 +107,18 @@ typedef enum waveType {
     WAVE_SINE = 's', /*!< Sine wave */
     WAVE_SQRE = 'q', /*!< Square wave */
     WAVE_SWTT = 'w', /*!< sawtooth */
-    WAVE_TRGL = 't'  /*!< trianglew */
+    WAVE_TRGL = 't'  /*!< triangle */
 } waveType_t;
+
 
 /*--------- Globals ---------*/
 static uint8_t wave_value = 0;
-static waveType_t wave_type;
+
+static waveType_t wave_type = WAVE_SWTT;
+
+/**
+   100 Point LUT
+ */
 static uint8_t sine_lut[] =
 { 127, 135, 143, 151, 159, 166, 174, 181, 188, 195, 202, 208, 214, 220, 225,
   230, 235, 239, 242, 246, 248, 250, 252, 253, 254, 255, 254, 253, 252, 250,
@@ -108,10 +126,12 @@ static uint8_t sine_lut[] =
   166, 159, 151, 143, 135, 127, 119, 111, 103, 95, 88, 80, 73, 66, 59, 52,
   46, 40, 34, 29, 24, 19, 15, 12, 8, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 8, 12,
   15, 19, 24, 29, 34, 40, 46, 52, 59, 66, 73, 80, 88, 95, 103, 111, 119 };
+static uint16_t lut_pos = 0;
 
-machineState_t major_state = STOP;
+static machineState_t major_state = STOP;
 
 unsigned char cmd_buff[128];
+static char is_rising = 1;
 
 /*--------- Main ---------*/
 int main(void)
@@ -138,22 +158,16 @@ int main(void)
 
       switch(major_state) {
 			case STOP:
-          rst_bit(LED_RUN);
-          rst_bit(LED_ERR);
-				
           break;
 			case RUN:
-          set_bit(LED_RUN);
-          rst_bit(LED_ERR);
-				
+          show_status(); //TODO: show status every half a second (no delays)
           break;
 			case ERROR:
-          set_bit(LED_ERR);
-          rst_bit(LED_RUN);
 				
           break;
       }
- 
+      //parse incoming characters
+      parse_cmd(cmd_buff);
     }
     /*DO NOT TOUCH BELOW THIS*/
 }
@@ -166,9 +180,30 @@ ISR(TIMER1_CMPA_vect)
 
     switch(wave_type) {
     case WAVE_SINE:
-   
-    default:
-        return;
+        DAC_PORT = sine_lut[lut_pos];
+        lut_pos = lut_pos >= 1000 ? 0 : lut_pos + 1;
+        break;
+    case WAVE_TRGL:
+        DAC_PORT = wave_value;
+        if(is_rising) {
+            ++wave_value;
+            if(wave_value == 255) {
+                is_rising = 0;
+            }
+        } else {
+            --wave_value;
+            if(wave_value == 0) {
+                is_rising = 1;
+            }
+        }
+        break;
+    case WAVE_SWTT:
+        DAC_PORT = wave_value++; //Yes, it should overflow
+        break;
+    case WAVE_SQRE:
+        DAC_PORT = wave_value < 127 ? 0 : 255;
+        ++wave_value;
+        break;
     }
 }
 
@@ -183,4 +218,54 @@ void timer1_set_period_us(uint16_t t_us)
     //OCR1AH = (OCVal >> 8);
     //OCR1AL = (OCval & 0xff);
 }
+
+void parse_cmd(unsigned char * _cmd_buff)
+{
+    const char help_str =
+        "-------------------------------------------------------\n"
+        "h - help\n"
+        "r - run generator (plase configure first)\n"
+        "s - stop generator\n"
+        "c - configure generator - format: c <waveType> <freq>\n"
+        "\t wavetypes :\n"
+        "\t  - s - [s]ine\n"
+        "\t  - q - s[q]uare\n"
+        "\t  - w - sa[w]tooth\n"
+        "\t  - t - [t]triangle\n"
+        "-------------------------------------------------------\n";
+    
+    cmd_t cmd = _cmd_buff[0];
+    switch(cmd) {
+    case CMD_RUN:
+        timer1_start();
+        major_state = RUN;
+        set_bit(LED_RUN);
+        rst_bit(LED_ERR);
+    case CMD_CFG:
+        //TODO parse cfg str
+    case CMD_STOP:
+        timer1_stop();
+    default:
+        serial_send("invalid cmd\n");
+    case CMD_HLP:
+        serial_send(help_str);
+
+        set_bit(LED_ERR);
+        break;
+    }
+}
+
+void serial_send(unsigned char * buff)
+{
+    //TODO: send string char by char
+}
+
+void serial_init(void)
+{
+    //TODO: configure serial registers for 115200 baud
+}
+void show_status(void) {
+    //TODO: show running status
+}
+
 /*--------- EOF ---------*/
