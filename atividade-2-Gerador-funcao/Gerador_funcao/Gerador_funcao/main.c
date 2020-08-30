@@ -85,7 +85,7 @@ typedef enum wave_type {
 } wave_type_t;
 
 /*--------- Globals ---------*/
-
+machineState_t major_state = STOP;
 /*--------- Main ---------*/
 int main(void)
 {
@@ -97,9 +97,24 @@ int main(void)
     __asm__("sei;");
 
     /* DO NOT TOUCH ABOVE THIS */
+	set_bit(LED_ON);
     while(1) {
         switch(major_state) {
-        
+			case STOP:
+				rst_bit(LED_RUN);
+				rst_bit(LED_ERR);
+				
+			break;
+			case RUN:
+				set_bit(LED_RUN);
+				rst_bit(LED_ERR);
+				
+			break;
+			case ERROR:
+				set_bit(LED_ERR);
+				rst_bit(LED_RUN);
+				
+			break;
         }
  
     }
