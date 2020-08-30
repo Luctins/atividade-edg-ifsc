@@ -109,9 +109,9 @@ static uint8_t sine_lut[] =
   46, 40, 34, 29, 24, 19, 15, 12, 8, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 8, 12,
   15, 19, 24, 29, 34, 40, 46, 52, 59, 66, 73, 80, 88, 95, 103, 111, 119 };
 
-
 machineState_t major_state = STOP;
 
+unsigned char cmd_buff[128];
 
 /*--------- Main ---------*/
 int main(void)
@@ -133,24 +133,26 @@ int main(void)
 
     /* DO NOT TOUCH ABOVE THIS */
 	set_bit(LED_ON);
-    while(1) {
-        switch(major_state) {
+  while(1) {
+
+
+      switch(major_state) {
 			case STOP:
-				rst_bit(LED_RUN);
-				rst_bit(LED_ERR);
+          rst_bit(LED_RUN);
+          rst_bit(LED_ERR);
 				
-			break;
+          break;
 			case RUN:
-				set_bit(LED_RUN);
-				rst_bit(LED_ERR);
+          set_bit(LED_RUN);
+          rst_bit(LED_ERR);
 				
-			break;
+          break;
 			case ERROR:
-				set_bit(LED_ERR);
-				rst_bit(LED_RUN);
+          set_bit(LED_ERR);
+          rst_bit(LED_RUN);
 				
-			break;
-        }
+          break;
+      }
  
     }
     /*DO NOT TOUCH BELOW THIS*/
@@ -164,8 +166,7 @@ ISR(TIMER1_CMPA_vect)
 
     switch(wave_type) {
     case WAVE_SINE:
-
-    
+   
     default:
         return;
     }
