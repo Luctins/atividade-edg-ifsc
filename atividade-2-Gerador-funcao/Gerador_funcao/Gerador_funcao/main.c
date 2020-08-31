@@ -65,6 +65,9 @@
 #define LED_ON  PORTC,1
 #define LED_RUN PORTC,2
 
+/*--- parameters ---*/
+#define BAUD_RATE (115200)
+
 /*--------- predeclaration ---------*/
 
 /*--- Timer 1 ---*/
@@ -82,6 +85,7 @@ inline void timer1_stop(void) { set_reg(TCCR1B, 0x07, 0x00); }
 inline void timer1_start(void) { set_reg(TCCR1B, 0x07, 0x01); }
 
 /*--- Serial ---*/
+void serial_send_char(unsigned char c)
 void serial_send(unsigned char * buff);
 void serial_init(void);
 void show_status(void);
@@ -126,12 +130,15 @@ static uint8_t sine_lut[] =
   166, 159, 151, 143, 135, 127, 119, 111, 103, 95, 88, 80, 73, 66, 59, 52,
   46, 40, 34, 29, 24, 19, 15, 12, 8, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 8, 12,
   15, 19, 24, 29, 34, 40, 46, 52, 59, 66, 73, 80, 88, 95, 103, 111, 119 };
+
 static uint16_t lut_pos = 0;
 
 static machineState_t major_state = STOP;
 
 unsigned char cmd_buff[128];
 static char is_rising = 1;
+
+uint16_t frequency = 10;
 
 /*--------- Main ---------*/
 int main(void)
@@ -232,8 +239,9 @@ void parse_cmd(unsigned char * _cmd_buff)
         "\t  - q - s[q]uare\n"
         "\t  - w - sa[w]tooth\n"
         "\t  - t - [t]triangle\n"
+        "\t frequency: 10-100 Hz, integer"
         "-------------------------------------------------------\n";
-    
+
     cmd_t cmd = _cmd_buff[0];
     switch(cmd) {
     case CMD_RUN:
@@ -257,15 +265,34 @@ void parse_cmd(unsigned char * _cmd_buff)
 
 void serial_send(unsigned char * buff)
 {
-    //TODO: send string char by char
+    //increment pointer until find null byte
+    for(;*buff;++buff)
+    {
+        serial_send_char(*buff)
+    }
+}
+
+void serial_send_char(unsigned char c)
+{
+    //TODO: send character here
 }
 
 void serial_init(void)
 {
-    //TODO: configure serial registers for 115200 baud
-}
-void show_status(void) {
-    //TODO: show running status
+    //TODO: configure serial registers for BAUD_RATE baud
 }
 
+void show_status(void)
+{
+    unsigned char buff[150];
+    // 53 = len of status line
+    for(int i = 53; i; --i) {
+        serial_send_char(127); //send ascii del
+    };
+    snprintf(buff, 150,
+             "-----------\n"
+             "status: %c wavef: %c freq: %03i\n"
+             "-----------\n", major_state == RUN ? 'r' : 's', wave_type, frequency);
+    }
+}
 /*--------- EOF ---------*/
