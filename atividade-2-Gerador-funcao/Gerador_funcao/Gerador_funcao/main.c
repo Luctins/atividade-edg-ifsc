@@ -70,6 +70,7 @@ const char * line_termination = "\r\n";
 
 /*--- parameters ---*/
 #define BAUD_RATE (115200)
+#define BAUD_PRESCALE ((F_CPU / (16UL * BAUD_RATE) ) - 1)
 
 /*--------- predeclaration ---------*/
 
@@ -150,10 +151,10 @@ int main(void)
     DDRB = 0xff;
     DDRC = 0x07;
     DDRD = 0xff;
-
-    //TODO: Configure serial
-    UBRR0 = (F_CPU / (16 * 115200) - 1); //p/ Modo Normal Assíncrono; 115200 = taxa de transmissão
     
+	//
+	serial_init();
+	
     //configure timer 1
     TCCR1A = 0b00000000; //timer in normal mode, no PWM modes
     TIMSK1 = 0x02; //enable Interrupt for OC1A
@@ -208,13 +209,21 @@ ISR(TIMER1_COMPA_vect)
         }
         break;
     case WAVE_SWTT:
-        DAC_PORT = wave_value++; //Yes, it should overflow
+        DAC_PORT = wave_value++; //yes, it should overflow
         break;
     case WAVE_SQRE:
         DAC_PORT = wave_value < 127 ? 0 : 255;
         ++wave_value;
         break;
     }
+}
+
+ISR(USART_RX_vect) //recepção serial
+{
+	char buff;
+	buff = UDR0; //dado que vem pela serial, manda bite a bite
+
+	//TODO: configurar recepção serial aqui
 }
 
 /*--------- Function definition ---------*/
@@ -290,9 +299,27 @@ void serial_send_char(const char c)
     //TODO: send character here
 }
 
+void USART_Transmit_string( char *data ) //transmite um dado (uma string) pela serial (do professor)
+{
+	while(*data != '\0')
+	{
+		/* Wait for empty transmit buffer */
+		while ( !(UCSR0A & (1<<UDRE0)));
+		
+		/* Put data into buffer, sends the data */
+		UDR0 = *data++;
+	}
+}
+
+
 void serial_init(void)
 {
-    //TODO: configure serial registers for BAUD_RATE baud
+	// Configure serial, 9600bps, 8bits per frame
+	UCSR0B = (1 << TXEN0)|(1 << RXEN0); //Enable serial
+	UCSR0B |= (1 << RXCIE0); //Enable serial reception on interruption
+	UCSR0C = (1 << UCSZ00) | (1 << UCSZ01); //8bits per frame
+	UBRR0H = (BAUD_PRESCALE >> 8); //9600bps
+	UBRR0L = BAUD_PRESCALE; // Modo Normal Assíncrono;
 }
 
 void show_status(void)
