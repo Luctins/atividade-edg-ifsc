@@ -49,7 +49,7 @@
 #define set_2byte_reg(val, reg) reg ## H = (val >> 8); reg ## L = (val & 0xff);
 
 const char * line_termination = "\r\n";
-#define DEBUG(msg) serial_send(msg); serial_send(line_termination)
+#define serial_debug(msg) serial_send(msg); serial_send(line_termination)
 
 /*--------- Constants ---------*/
 
@@ -183,7 +183,7 @@ int main(void)
 }
 
 /*--------- Interrupts ---------*/
-ISR(TIMER1_CMPA_vect)
+ISR(TIMER1_COMPA_vect)
 {
     //reset timer value
     set_2byte_reg(0x0000, TCNT1);
@@ -259,15 +259,15 @@ void parse_cmd(char * _cmd_buff)
         if(w && f <= 1000) {
             wave_type = w;
             frequency = f;
-            DEBUG("ok");
+            serial_debug("ok");
         } else {
-            DEBUG("invalid arg");
+            serial_debug("invalid arg");
         }
     case CMD_STOP:
         timer1_stop();
-        DEBUG("stopped");
+        serial_debug("stopped");
     default:
-        DEBUG("invalid cmd");
+        serial_debug("invalid cmd");
     case CMD_HLP:
         serial_send(help_str);
 
