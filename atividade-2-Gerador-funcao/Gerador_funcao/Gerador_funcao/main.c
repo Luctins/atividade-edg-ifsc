@@ -170,7 +170,7 @@ int main(void)
           show_status(); //TODO: show status every half a second (no delays)
           break;
 			case ERROR:
-				
+          
           break;
       }
       //parse incoming characters
@@ -243,6 +243,8 @@ void parse_cmd(unsigned char * _cmd_buff)
         "-------------------------------------------------------\n";
 
     cmd_t cmd = _cmd_buff[0];
+    char w;
+    uint16_t 
     switch(cmd) {
     case CMD_RUN:
         timer1_start();
@@ -250,7 +252,7 @@ void parse_cmd(unsigned char * _cmd_buff)
         set_bit(LED_RUN);
         rst_bit(LED_ERR);
     case CMD_CFG:
-        //TODO parse cfg str
+        sscanf(_cmd_buff, "%*c %c %i\n", ...)
     case CMD_STOP:
         timer1_stop();
     default:
@@ -286,13 +288,37 @@ void show_status(void)
 {
     unsigned char buff[150];
     // 53 = len of status line
-    for(int i = 53; i; --i) {
+    const char * wave_art[] =
+        {
+            "|  _\r\n"
+            "| /  \\\r\n"
+            "-/----\\---/->\r\n"
+            "|      \\_/\r\n",
+            "| __\r\n"
+            "||  |\r\n"
+            "-|--|--|->\r\n"
+            "||  |__|\r\n",
+            "|\r\n"
+            "| /|  /|\r\n"
+            "-/-|-/-|->\r\n"
+            "|  |/\r\n",
+            "|\r\n"
+            "| /\\\r\n"
+            "-/--\\--/->\r\n"
+            "|    \\/\r\n",
+        }
+    snprintf(buff, 150,
+             "-----------\r\n"
+             "status: %c wavef: %c freq: %03i\r\n"
+             "%s"
+             "-----------\r\n", major_state == RUN ? 'r' : 's', wave_type, frequency,
+             (wave_type == WAVE_SINE ? wave_art[0] :
+              (wave_type == WAVE_SQRE ? wave_art[1] :
+               (wave_type == WAVE_SWTT ? wave_art[2] :
+                (wave_type == WAVE_TRGL ? wave_art[3])))));
+    serial_send(buff);
+    for (uint8_t i = strnlen(buff,150); i; --i) {
         serial_send_char(127); //send ascii del
     };
-    snprintf(buff, 150,
-             "-----------\n"
-             "status: %c wavef: %c freq: %03i\n"
-             "-----------\n", major_state == RUN ? 'r' : 's', wave_type, frequency);
-    }
 }
 /*--------- EOF ---------*/
