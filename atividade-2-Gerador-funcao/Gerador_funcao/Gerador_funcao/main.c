@@ -63,28 +63,26 @@ const char * line_termination = "\r\n";
 #define DAC6 PORTB,6
 #define DAC7 PORTB,7
 #define DAC_PORT PORTB
+#define FREQ_ADJ_POT 7 /*DAC channel 7*/
+#define BTN_STRT_STOP PIND,3
+#define BTN_TGL_WAVE  PIND,2
 
 #define LED_ERR PORTC,0
 #define LED_ON  PORTC,1
 #define LED_RUN PORTC,2
 
+#define LED_SINE PORTD,7
+#define LED_TRNG PORTD,6
+#define LED_SQRE PORTD,5
+#define LED_SWTT PORTD,4
+
 /*--- parameters ---*/
 #define BAUD_RATE (115200)
 
 /*--------- predeclaration ---------*/
-
 /*--- Timer 1 ---*/
 void timer1_set_period_us(uint16_t t_us);
-/**
-  Stop timer 1.
-  @return void
-*/
-inline void timer1_stop(void) { set_reg(TCCR1B, 0x07, 0x00); }
-
-/**
-  Start timer 1 with prescaler of 1.
-  @return void
-*/
+inline void timer1_stop(void)  { set_reg(TCCR1B, 0x07, 0x00); }
 inline void timer1_start(void) { set_reg(TCCR1B, 0x07, 0x01); }
 
 /*--- Serial ---*/
@@ -133,44 +131,54 @@ static uint8_t sine_lut[] =
   166, 159, 151, 143, 135, 127, 119, 111, 103, 95, 88, 80, 73, 66, 59, 52,
   46, 40, 34, 29, 24, 19, 15, 12, 8, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 8, 12,
   15, 19, 24, 29, 34, 40, 46, 52, 59, 66, 73, 80, 88, 95, 103, 111, 119 };
-
 static uint16_t lut_pos = 0;
 
 static machineState_t major_state = STOP;
 
 char cmd_buff[128];
-static char is_rising = 1;
 
+static char is_rising = 1;
 uint16_t frequency = 10;
+
+char shown_status = 0;
+
+static uint8_t t0_cnt = 0; //timer0 interrupt counter 
 
 /*--------- Main ---------*/
 int main(void)
 {
-    //set up pin directions
+    /* set up pin directions */
     DDRB = 0xff;
     DDRC = 0x07;
-    DDRD = 0xff;
+    DDRD = 0xf0;
+
+    /* configure ADC  */
+
 
     //TODO: Configure serial
     UBRR0 = (F_CPU / (16 * 115200) - 1); //p/ Modo Normal Assíncrono; 115200 = taxa de transmissão
     
+    //configure timer 0
+    
+
     //configure timer 1
     TCCR1A = 0b00000000; //timer in normal mode, no PWM modes
     TIMSK1 = 0x02; //enable Interrupt for OC1A
 
+
     //enable interrupts
     __asm__("sei;");
 
-    /* DO NOT TOUCH ABOVE THIS */
 	set_bit(LED_ON);
   while(1) {
-
-
       switch(major_state) {
 			case STOP:
           break;
 			case RUN:
-          show_status(); //TODO: show status every half a second (no delays)
+          if (!shown_status) {
+              show_status();
+              shown_status = 1;
+          }
           break;
 			case ERROR:
           
@@ -179,11 +187,19 @@ int main(void)
       //parse incoming characters
       parse_cmd(cmd_buff);
     }
-    /*DO NOT TOUCH BELOW THIS*/
 }
 
 /*--------- Interrupts ---------*/
-ISR(TIMER1_CMPA_vect)
+
+ISR(TIMER0_OVF_vect)
+{
+    if(t0_cnt++ > 10) {
+        t0_cnt = 0;
+        shown_status = 0;
+    }
+}
+
+ISR(TIMER1_COMPA_vect)
 {
     //reset timer value
     set_2byte_reg(0x0000, TCNT1);
@@ -332,4 +348,5 @@ void show_status(void)
         serial_send_char(127); //send ascii del
     };
 }
+
 /*--------- EOF ---------*/
