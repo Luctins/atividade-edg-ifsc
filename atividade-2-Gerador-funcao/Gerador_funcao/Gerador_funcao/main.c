@@ -88,8 +88,8 @@ inline void timer1_stop(void) { set_reg(TCCR1B, 0x07, 0x00); }
 inline void timer1_start(void) { set_reg(TCCR1B, 0x07, 0x01); }
 
 /*--- Serial ---*/
-void serial_send_char(char c);
-void serial_send(char * buff);
+void serial_send_char(const char c);
+void serial_send(const char * buff);
 void serial_init(void);
 void show_status(void);
 
@@ -138,7 +138,7 @@ static uint16_t lut_pos = 0;
 
 static machineState_t major_state = STOP;
 
-unsigned char cmd_buff[128];
+char cmd_buff[128];
 static char is_rising = 1;
 
 uint16_t frequency = 10;
@@ -276,7 +276,7 @@ void parse_cmd(char * _cmd_buff)
     }
 }
 
-void serial_send(char * buff)
+void serial_send(const char * buff)
 {
     //increment pointer until find null byte
     for(;*buff;++buff)
@@ -285,7 +285,7 @@ void serial_send(char * buff)
     }
 }
 
-void serial_send_char(char c)
+void serial_send_char(const char c)
 {
     //TODO: send character here
 }
@@ -297,7 +297,7 @@ void serial_init(void)
 
 void show_status(void)
 {
-    unsigned char buff[150];
+    char buff[150];
     // 53 = len of status line
     const char * wave_art[] =
         {
@@ -308,7 +308,7 @@ void show_status(void)
             "| __\r\n"
             "||  |\r\n"
             "-|--|--|->\r\n"
-            "||  |__|\r\n",
+            "|   |__|\r\n",
             "|\r\n"
             "| /|  /|\r\n"
             "-/-|-/-|->\r\n"
