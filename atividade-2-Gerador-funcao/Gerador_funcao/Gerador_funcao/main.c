@@ -48,6 +48,9 @@
 
 #define set_2byte_reg(val, reg) reg ## H = (val >> 8); reg ## L = (val & 0xff);
 
+const char * line_termination = "\r\n";
+#define DEBUG(msg) serial_send(msg); serial_send(line_termination)
+
 /*--------- Constants ---------*/
 
 /*--- pins ---*/
@@ -85,13 +88,13 @@ inline void timer1_stop(void) { set_reg(TCCR1B, 0x07, 0x00); }
 inline void timer1_start(void) { set_reg(TCCR1B, 0x07, 0x01); }
 
 /*--- Serial ---*/
-void serial_send_char(unsigned char c)
-void serial_send(unsigned char * buff);
+void serial_send_char(char c);
+void serial_send(char * buff);
 void serial_init(void);
 void show_status(void);
 
 /*--- Others ---*/
-void parse_cmd(unsigned char * _cmd_buff);
+void parse_cmd(char * _cmd_buff);
 
 /*--- Types ---*/
 typedef enum machineState {
@@ -149,7 +152,7 @@ int main(void)
     DDRD = 0xff;
 
     //TODO: Configure serial
-    UBRR0 = (F_CPU / (16 * 115200) - 1) //p/ Modo Normal Assíncrono; 115200 = taxa de transmissão
+    UBRR0 = (F_CPU / (16 * 115200) - 1); //p/ Modo Normal Assíncrono; 115200 = taxa de transmissão
     
     //configure timer 1
     TCCR1A = 0b00000000; //timer in normal mode, no PWM modes
@@ -226,9 +229,9 @@ void timer1_set_period_us(uint16_t t_us)
     //OCR1AL = (OCval & 0xff);
 }
 
-void parse_cmd(unsigned char * _cmd_buff)
+void parse_cmd(char * _cmd_buff)
 {
-    const char help_str =
+    const char help_str[] =
         "-------------------------------------------------------\n"
         "h - help\n"
         "r - run generator (plase configure first)\n"
@@ -243,8 +246,8 @@ void parse_cmd(unsigned char * _cmd_buff)
         "-------------------------------------------------------\n";
 
     cmd_t cmd = _cmd_buff[0];
-    char w;
-    uint16_t 
+    char w = 0;
+    uint16_t f = 9999;
     switch(cmd) {
     case CMD_RUN:
         timer1_start();
@@ -252,11 +255,19 @@ void parse_cmd(unsigned char * _cmd_buff)
         set_bit(LED_RUN);
         rst_bit(LED_ERR);
     case CMD_CFG:
-        sscanf(_cmd_buff, "%*c %c %i\n", ...)
+        sscanf(_cmd_buff, "%*c %c %u\n", &w, &f);
+        if(w && f <= 1000) {
+            wave_type = w;
+            frequency = f;
+            DEBUG("ok");
+        } else {
+            DEBUG("invalid arg");
+        }
     case CMD_STOP:
         timer1_stop();
+        DEBUG("stopped");
     default:
-        serial_send("invalid cmd\n");
+        DEBUG("invalid cmd");
     case CMD_HLP:
         serial_send(help_str);
 
@@ -265,16 +276,16 @@ void parse_cmd(unsigned char * _cmd_buff)
     }
 }
 
-void serial_send(unsigned char * buff)
+void serial_send(char * buff)
 {
     //increment pointer until find null byte
     for(;*buff;++buff)
     {
-        serial_send_char(*buff)
+        serial_send_char(*buff);
     }
 }
 
-void serial_send_char(unsigned char c)
+void serial_send_char(char c)
 {
     //TODO: send character here
 }
@@ -306,7 +317,7 @@ void show_status(void)
             "| /\\\r\n"
             "-/--\\--/->\r\n"
             "|    \\/\r\n",
-        }
+        };
     snprintf(buff, 150,
              "-----------\r\n"
              "status: %c wavef: %c freq: %03i\r\n"
@@ -315,7 +326,7 @@ void show_status(void)
              (wave_type == WAVE_SINE ? wave_art[0] :
               (wave_type == WAVE_SQRE ? wave_art[1] :
                (wave_type == WAVE_SWTT ? wave_art[2] :
-                (wave_type == WAVE_TRGL ? wave_art[3])))));
+                (wave_art[3])))));
     serial_send(buff);
     for (uint8_t i = strnlen(buff,150); i; --i) {
         serial_send_char(127); //send ascii del
