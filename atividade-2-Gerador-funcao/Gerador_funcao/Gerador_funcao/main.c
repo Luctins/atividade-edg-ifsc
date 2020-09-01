@@ -69,7 +69,7 @@ const char * line_termination = "\r\n";
 #define LED_RUN PORTC,2
 
 /*--- parameters ---*/
-#define BAUD_RATE (115200)
+#define BAUD_RATE (9600)
 #define BAUD_PRESCALE ((F_CPU / (16UL * BAUD_RATE) ) - 1)
 
 /*--------- predeclaration ---------*/
@@ -166,9 +166,7 @@ int main(void)
     /* DO NOT TOUCH ABOVE THIS */
 	set_bit(LED_ON);
     while(1) {
-		char batata[2]="52";
-        USART_Transmit_string(batata);
-
+		
         switch(major_state) {
 			case STOP:
             break;
