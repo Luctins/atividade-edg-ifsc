@@ -89,6 +89,7 @@ inline void timer1_stop(void) { set_reg(TCCR1B, 0x07, 0x00); }
 inline void timer1_start(void) { set_reg(TCCR1B, 0x07, 0x01); }
 
 /*--- Serial ---*/
+void USART_Transmit_string(char *data);
 void serial_send_char(const char c);
 void serial_send(const char * buff);
 void serial_init(void);
@@ -164,18 +165,19 @@ int main(void)
 
     /* DO NOT TOUCH ABOVE THIS */
 	set_bit(LED_ON);
-  while(1) {
+    while(1) {
+		char batata[2]="52";
+        USART_Transmit_string(batata);
 
-
-      switch(major_state) {
+        switch(major_state) {
 			case STOP:
-          break;
+            break;
 			case RUN:
-          show_status(); //TODO: show status every half a second (no delays)
-          break;
+            show_status(); //TODO: show status every half a second (no delays)
+            break;
 			case ERROR:
           
-          break;
+            break;
       }
       //parse incoming characters
       parse_cmd(cmd_buff);
