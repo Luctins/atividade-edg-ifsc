@@ -43,7 +43,6 @@
 
 #include "util.h"
 
-
 /*--------- Macros ---------*/
 
 #define set_2byte_reg(val, reg) reg ## H = (val >> 8); reg ## L = (val & 0xff);
@@ -77,7 +76,7 @@ const char * line_termination = "\r\n";
 #define LED_SWTT PORTD,4
 
 /*--- parameters ---*/
-#define BAUD_RATE (9600)
+#define BAUD_RATE 9600
 #define BAUD_PRESCALE ((F_CPU / (16UL * BAUD_RATE) ) - 1)
 
 /*--------- predeclaration ---------*/
@@ -116,7 +115,6 @@ typedef enum waveType {
     WAVE_SWTT = 'w', /*!< sawtooth */
     WAVE_TRGL = 't'  /*!< triangle */
 } waveType_t;
-
 
 /*--------- Globals ---------*/
 static uint8_t wave_value = 0;
@@ -170,18 +168,26 @@ int main(void)
     __asm__("sei;");
 
 	set_bit(LED_ON);
-
-    while(1) {		
+	
+	/*Teste serial
+	char buff[10];
+	unsigned int numero = 8;
+	sprintf(buff, "%d\r\n", numero);
+	USART_Transmit_string(buff);*/
+	
+    while(1) {
         switch(major_state) {
 
 			case STOP:
             break;
+			
 			case RUN:
           if (!shown_status) {
               show_status();
               shown_status = 1;
           }
           break;
+		  
 			case ERROR:
           
             break;
@@ -199,7 +205,6 @@ ISR(TIMER0_OVF_vect)
         shown_status = 0;
     }
 }
-
 
 ISR(TIMER1_COMPA_vect)
 {
@@ -327,7 +332,6 @@ void USART_Transmit_string( char *data ) //transmite um dado (uma string) pela s
 		UDR0 = *data++;
 	}
 }
-
 
 void serial_init(void)
 {
