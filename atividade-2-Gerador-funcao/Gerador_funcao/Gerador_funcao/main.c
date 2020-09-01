@@ -49,7 +49,7 @@
 #define set_2byte_reg(val, reg) reg ## H = (val >> 8); reg ## L = (val & 0xff);
 
 const char * line_termination = "\r\n";
-#define DEBUG(msg) serial_send(msg); serial_send(line_termination)
+#define serial_debug(msg) serial_send(msg); serial_send(line_termination)
 
 /*--------- Constants ---------*/
 
@@ -77,7 +77,8 @@ const char * line_termination = "\r\n";
 #define LED_SWTT PORTD,4
 
 /*--- parameters ---*/
-#define BAUD_RATE (115200)
+#define BAUD_RATE (9600)
+#define BAUD_PRESCALE ((F_CPU / (16UL * BAUD_RATE) ) - 1)
 
 /*--------- predeclaration ---------*/
 /*--- Timer 1 ---*/
@@ -86,6 +87,7 @@ inline void timer1_stop(void)  { set_reg(TCCR1B, 0x07, 0x00); }
 inline void timer1_start(void) { set_reg(TCCR1B, 0x07, 0x01); }
 
 /*--- Serial ---*/
+void USART_Transmit_string(char *data);
 void serial_send_char(const char c);
 void serial_send(const char * buff);
 void serial_init(void);
@@ -154,12 +156,10 @@ int main(void)
 
     /* configure ADC  */
 
+    /* configure timer 0 */
+    
 
-    //TODO: Configure serial
-    UBRR0 = (F_CPU / (16 * 115200) - 1); //p/ Modo Normal Assíncrono; 115200 = taxa de transmissão
-    
-    //configure timer 0
-    
+    serial_init();
 
     //configure timer 1
     TCCR1A = 0b00000000; //timer in normal mode, no PWM modes
@@ -170,10 +170,12 @@ int main(void)
     __asm__("sei;");
 
 	set_bit(LED_ON);
-  while(1) {
-      switch(major_state) {
+
+    while(1) {		
+        switch(major_state) {
+
 			case STOP:
-          break;
+            break;
 			case RUN:
           if (!shown_status) {
               show_status();
@@ -182,7 +184,7 @@ int main(void)
           break;
 			case ERROR:
           
-          break;
+            break;
       }
       //parse incoming characters
       parse_cmd(cmd_buff);
@@ -190,7 +192,6 @@ int main(void)
 }
 
 /*--------- Interrupts ---------*/
-
 ISR(TIMER0_OVF_vect)
 {
     if(t0_cnt++ > 10) {
@@ -198,6 +199,7 @@ ISR(TIMER0_OVF_vect)
         shown_status = 0;
     }
 }
+
 
 ISR(TIMER1_COMPA_vect)
 {
@@ -224,13 +226,21 @@ ISR(TIMER1_COMPA_vect)
         }
         break;
     case WAVE_SWTT:
-        DAC_PORT = wave_value++; //Yes, it should overflow
+        DAC_PORT = wave_value++; //yes, it should overflow
         break;
     case WAVE_SQRE:
         DAC_PORT = wave_value < 127 ? 0 : 255;
         ++wave_value;
         break;
     }
+}
+
+ISR(USART_RX_vect) //recepção serial
+{
+	char buff;
+	buff = UDR0; //dado que vem pela serial, manda bite a bite
+
+	//TODO: configurar recepção serial aqui
 }
 
 /*--------- Function definition ---------*/
@@ -275,15 +285,15 @@ void parse_cmd(char * _cmd_buff)
         if(w && f <= 1000) {
             wave_type = w;
             frequency = f;
-            DEBUG("ok");
+            serial_debug("ok");
         } else {
-            DEBUG("invalid arg");
+            serial_debug("invalid arg");
         }
     case CMD_STOP:
         timer1_stop();
-        DEBUG("stopped");
+        serial_debug("stopped");
     default:
-        DEBUG("invalid cmd");
+        serial_debug("invalid cmd");
     case CMD_HLP:
         serial_send(help_str);
 
@@ -306,9 +316,27 @@ void serial_send_char(const char c)
     //TODO: send character here
 }
 
+void USART_Transmit_string( char *data ) //transmite um dado (uma string) pela serial (do professor)
+{
+	while(*data != '\0')
+	{
+		/* Wait for empty transmit buffer */
+		while ( !(UCSR0A & (1<<UDRE0)));
+		
+		/* Put data into buffer, sends the data */
+		UDR0 = *data++;
+	}
+}
+
+
 void serial_init(void)
 {
-    //TODO: configure serial registers for BAUD_RATE baud
+	// Configure serial, 9600bps, 8bits per frame
+	UCSR0B = (1 << TXEN0)|(1 << RXEN0); //Enable serial
+	UCSR0B |= (1 << RXCIE0); //Enable serial reception on interruption
+	UCSR0C = (1 << UCSZ00) | (1 << UCSZ01); //8bits per frame
+	UBRR0H = (BAUD_PRESCALE >> 8); //9600bps
+	UBRR0L = BAUD_PRESCALE; // Modo Normal Assíncrono;
 }
 
 void show_status(void)
