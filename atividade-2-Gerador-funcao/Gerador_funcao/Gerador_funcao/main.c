@@ -52,7 +52,7 @@ const char const * line_termination = "\r\n";
 
 /*--------- Constants ---------*/
 #define CMD_BUFF_LEN 127
-#define BAUD_RATE (115200)
+#define BAUD_RATE (9600)
 #define WAVE_PTS (100)
 #define SIN_LUT_LEN (WAVE_PTS)
 #define MAX_F 100
@@ -65,17 +65,10 @@ static const uint8_t sine_lut[SIN_LUT_LEN] =
   248, 246, 242, 239, 235, 230, 225, 220, 214, 208, 202, 195, 188, 181, 174,
   166, 159, 151, 143, 135, 127, 119, 111, 103, 95, 88, 80, 73, 66, 59, 52,
   46, 40, 34, 29, 24, 19, 15, 12, 8, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 8, 12,
-  15, 19, 24, 29, 34, 40, 46, 52, 59, 66, 73, 80, 88, 95, 103, 111, 119 };
+  15, 19, 24, 29, 34, 40, 46, 52, 59, 66, 73, 80, 88, 95, 103, 111, 119
+};
 
 /*--- pins ---*/
-#define DAC0 PORTB,0
-#define DAC1 PORTB,1
-#define DAC2 PORTB,2
-#define DAC3 PORTB,3
-#define DAC4 PORTB,4
-#define DAC5 PORTB,5
-#define DAC6 PORTB,6
-#define DAC7 PORTB,7
 #define DAC_PORT PORTB
 
 #define FREQ_ADJ_POT 7 /*DAC channel 7*/
@@ -84,14 +77,15 @@ static const uint8_t sine_lut[SIN_LUT_LEN] =
 #define BTN_SS PIND,3 //start stop btn
 #define BTN_WAVE  PIND,2 //toggle wave type button
 
-#define LED_ON  PORTC,0
-#define LED_RUN PORTC,1
+#define LED_ON  PORTC,1
+#define LED_RUN PORTC,0
 
 #define LED_SINE PORTD,7
 #define LED_TRGL PORTD,6
 #define LED_SQRE PORTD,5
 #define LED_SWTT PORTD,4
 
+#define DEBG_PIN PORTC,2
 /*--------- predeclaration ---------*/
 
 /*--- Types ------*/
@@ -117,8 +111,8 @@ typedef enum waveType {
 /*--- Functions ---*/
 /*--- Timer 1 ---*/
 void timer1_set_period_us(uint16_t t_us);
-inline void timer1_stop(void)  { set_reg(TCCR1B, 0x07, 0x00); }
-inline void timer1_start(void) { set_reg(TCCR1B, 0x07, 0x02); }
+inline void timer1_stop(void)  { TIMSK1 = 0x00; }
+inline void timer1_start(void) { TIMSK1 = 0x02; }
 
 /*--- UART ---*/
 void uart_init(uint32_t baudrate);
@@ -132,10 +126,10 @@ void show_status(void);
 
 /*--------- Globals ---------*/
 static uint8_t wave_value = 0; //current position in cycle
-static waveType_t wave_type = WAVE_SWTT; //current generator wave type
+static waveType_t wave_type = WAVE_SQRE; //current generator wave type
 static uint16_t lut_pos = 0; //position in lookup table, used for sine gen
 
-static machineState_t major_state = RUN;//machine state
+static machineState_t major_state = STOP;//machine state
 
 static char is_rising = 1;
 uint16_t frequency = 50;
@@ -156,21 +150,24 @@ int main(void)
     DDRC = 0x07;
     DDRD = 0xf0;
 
-    DDRC |= 0x04;
+    DDRC |= 0x04;//debug pin
+
     //Configure pin interrupts
     EICRA = 0x00; //set both INT0 and INT1 as falling edge
+    EIMSK = 0x03; //enable INT1 and INT0
 
     /* configure ADC  */
+    //TODO: set up adc for frequency adjustment
 
     /* configure timer 0 */
     TCCR0A = 0x00;
     TIMSK0 = 0x01;//enable isr for timer 0 ovf 
 
     /*configure timer 1 */
-    TCCR1A = 0b00000000; //timer in normal mode, presc = 8
-    TIMSK1 = 0x02; //enable Interrupt for OC1A
+    TCCR1A = 0b00000000; //timer in normal mode,
+    TCCR1B = 0x02; //presc = 8
+    TIMSK1 = 0x00; //enable Interrupt for OC1A
     timer1_set_period_us(10);
-    timer1_start();
 
     uart_init(BAUD_RATE);
 
@@ -180,12 +177,14 @@ int main(void)
     uart_send_str("hello there!");
     set_bit(LED_ON);
 
-    while(1) {		
+    while(1) {
+
         switch(major_state) {
 
         case STOP:
             timer1_stop();
             DAC_PORT = 0x00;
+            rst_bit(LED_RUN);
             if(cmd_recved) {
                 parse_cmd(cmd_buff); //parse incoming message
             }
@@ -195,20 +194,28 @@ int main(void)
             set_bit(LED_RUN);
             switch(wave_type) {
             case WAVE_SINE:
-                rst_bit(LED_SINE);
-                set_bit(LED_TRGL);
+                set_bit(LED_SINE);
+                rst_bit(LED_SWTT);
+                rst_bit(LED_TRGL);
+                rst_bit(LED_SQRE);
                 break;
             case WAVE_TRGL:
-                rst_bit(LED_TRGL);
-                set_bit(LED_SQRE);
+                set_bit(LED_TRGL);
+                rst_bit(LED_SINE);
+                rst_bit(LED_SWTT);
+                rst_bit(LED_SQRE);
                 break;
             case WAVE_SQRE:
-                rst_bit(LED_SQRE);
-                set_bit(LED_SWTT);
+                set_bit(LED_SQRE);
+                rst_bit(LED_SINE);
+                rst_bit(LED_SWTT);
+                rst_bit(LED_TRGL);
                 break;
             case WAVE_SWTT:
-                rst_bit(LED_SWTT);
-                set_bit(LED_SINE);
+                set_bit(LED_SWTT);
+                rst_bit(LED_SINE);
+                rst_bit(LED_TRGL);
+                rst_bit(LED_SQRE);
                 break;
             }
             if (!shown_status) {
@@ -268,37 +275,38 @@ ISR(TIMER0_OVF_vect)
 */
 ISR(TIMER1_COMPA_vect)
 {
-    //set_bit(DEBG_PIN);
+    set_bit(DEBG_PIN);
     set_2byte_reg(0x0000, TCNT1); //reset timer value
 
     switch(wave_type) {
     case WAVE_SINE:
         DAC_PORT = sine_lut[lut_pos];
-        lut_pos = lut_pos >= SIN_LUT_LEN ? 0 : lut_pos + 1;
+        lut_pos = lut_pos < SIN_LUT_LEN ? lut_pos + 1 : 0;
         break;
     case WAVE_TRGL:
-        DAC_PORT = wave_value;
+        DAC_PORT = wave_value; //TODO: FIX THIS wrong range shoulf be 0-255
         if(is_rising) {
-            ++wave_value;
-            if(wave_value == 255) {
+            wave_value = wave_value < WAVE_PTS ? wave_value + 1 : 0;
+            if(wave_value == WAVE_PTS) {
                 is_rising = 0;
             }
         } else {
-            --wave_value;
+            wave_value = wave_value ? wave_value - 1 : WAVE_PTS;
             if(wave_value == 0) {
                 is_rising = 1;
             }
         }
         break;
     case WAVE_SWTT:
-        DAC_PORT = wave_value++; //yes, it should overflow
+        DAC_PORT = wave_value; //TODO: FIX THIS wrong range shoulf be 0-255
+        wave_value = wave_value < WAVE_PTS ? wave_value + 1 : 0;
         break;
     case WAVE_SQRE:
-        DAC_PORT = wave_value < 127 ? 0 : 255;
-        ++wave_value;
+        DAC_PORT = wave_value < WAVE_PTS/2 ? 0 : 255;
+        wave_value = wave_value < WAVE_PTS ? wave_value + 1 : 0;
         break;
     }
-    //rst_bit(DEBG_PIN);
+    rst_bit(DEBG_PIN);
 }
 
 /**
@@ -326,7 +334,7 @@ void timer1_set_period_us(uint16_t t_us)
 {
     //test for greatest period that fits in OCreg
     t_us = t_us > (65536/2) ? (65536/2) : t_us;
-    uint16_t OCval = t_us*2;
+    uint16_t OCval = t_us;
     //set output compare high and low byte
     set_2byte_reg(OCval, OCR1A);
     //OCR1AH = (OCVal >> 8);
@@ -445,9 +453,9 @@ void uart_init(uint32_t baudrate)
     UCSR0B = (1 << TXEN0)|(1 << RXEN0); //Enable serial
     UCSR0B |= (1 << RXCIE0); //Enable serial reception on interruption
     UCSR0C = (1 << UCSZ00) | (1 << UCSZ01); //8bits per frame
-    set_2byte_reg(((F_CPU / (16UL * baudrate) ) - 1), UBRR0);//set baudrate prescaler
-    //UBRR0H = (((F_CPU / (16UL * baudrate) ) - 1) >> 8);
-    //UBRR0L = ((F_CPU / (16UL * baudrate) ) - 1);; // Modo Normal Assíncrono;
+    //set_2byte_reg(((F_CPU / (16UL * baudrate) ) - 1), UBRR0);//set baudrate prescaler
+    UBRR0H = (((F_CPU / ((uint32_t)16 * baudrate) ) - 1) >> 8);
+    UBRR0L = ((F_CPU / ((uint32_t)16 * baudrate) ) - 1); // Modo Normal Assíncrono;
 }
 
 /*--------- EOF ---------*/
