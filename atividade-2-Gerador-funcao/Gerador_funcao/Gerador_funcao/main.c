@@ -43,7 +43,6 @@
 
 #include "util.h"
 
-
 /*--------- Macros ---------*/
 
 #define set_2byte_reg(val, reg) reg ## H = (val >> 8); reg ## L = (val & 0xff);
@@ -93,7 +92,6 @@ static const uint8_t sine_lut[SIN_LUT_LEN] =
 #define LED_SQRE PORTD,5
 #define LED_SWTT PORTD,4
 
-#define DEBG_PIN PORTC,2
 /*--------- predeclaration ---------*/
 
 /*--- Types ------*/
