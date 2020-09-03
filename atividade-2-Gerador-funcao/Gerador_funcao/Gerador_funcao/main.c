@@ -44,6 +44,7 @@
 #include "util.h"
 
 /*--------- Macros ---------*/
+#define DEBUG_PULSE_PIN_ISR 0
 
 #define set_2byte_reg(val, reg) reg ## H = (val >> 8); reg ## L = (val & 0xff);
 
@@ -54,20 +55,38 @@ const char const * line_termination = "\r\n";
 #define CMD_BUFF_LEN 127
 #define BAUD_RATE (9600)
 #define WAVE_PTS (100)
-#define SIN_LUT_LEN (WAVE_PTS)
-#define MAX_F 100
+#define LUT_LEN (WAVE_PTS)
+#define MAX_F (100)
 /**
-   100 Point LUT
+   100 Point LUT's for all minimally complex curves
 */
-static const uint8_t sine_lut[SIN_LUT_LEN] =
-{ 127, 135, 143, 151, 159, 166, 174, 181, 188, 195, 202, 208, 214, 220, 225,
-  230, 235, 239, 242, 246, 248, 250, 252, 253, 254, 255, 254, 253, 252, 250,
-  248, 246, 242, 239, 235, 230, 225, 220, 214, 208, 202, 195, 188, 181, 174,
-  166, 159, 151, 143, 135, 127, 119, 111, 103, 95, 88, 80, 73, 66, 59, 52,
-  46, 40, 34, 29, 24, 19, 15, 12, 8, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 8, 12,
-  15, 19, 24, 29, 34, 40, 46, 52, 59, 66, 73, 80, 88, 95, 103, 111, 119
-};
-
+PROGMEM static const uint8_t sine_lut[LUT_LEN] =
+    {
+     127, 135, 143, 151, 159, 167, 174, 182, 189, 196, 203, 209, 215, 221, 226, 231,
+     235, 239, 243, 246, 249, 251, 253, 254, 254, 254, 254, 253, 252, 250, 247, 245,
+     241, 237, 233, 228, 223, 218, 212, 206, 199, 192, 185, 178, 171, 163, 155, 147,
+     139, 131, 123, 115, 107, 99, 91, 83, 76, 69, 62, 55, 48, 42, 36, 31, 26, 21,
+     17, 13, 9, 7, 4, 2, 1, 0, 0, 0, 0, 1, 3, 5, 8, 11, 15, 19, 23, 28, 33, 39, 45,
+     51, 58, 65, 72, 80, 87, 95, 103, 111, 119, 127
+    };
+PROGMEM static const uint8_t trgl_lut[LUT_LEN] = 
+    {
+     0, 5, 10, 15, 20, 25, 30, 36, 41, 46, 51, 56, 61, 66, 72, 77, 82, 87, 92, 97,
+     103, 108, 113, 118, 123, 128, 133, 139, 144, 149, 154, 159, 164, 170, 175, 180,
+     185, 190, 195, 200, 206, 211, 216, 221, 226, 231, 236, 242, 247, 252, 2, 7, 12,
+     18, 23, 28, 33, 38, 43, 48, 54, 59, 64, 69, 74, 79, 84, 90, 95, 100, 105, 110,
+     115, 121, 126, 131, 136, 141, 146, 151, 157, 162, 167, 172, 177, 182, 188, 193,
+     198, 203, 208, 213, 218, 224, 229, 234, 239, 244, 249, 255
+    };
+PROGMEM static const uint8_t swtt_lut[LUT_LEN] = 
+    {
+     0, 2, 5, 7, 10, 12, 15, 18, 20, 23, 25, 28, 30, 33, 36, 38, 41, 43, 46, 48, 51,
+     54, 56, 59, 61, 64, 66, 69, 72, 74, 77, 79, 82, 85, 87, 90, 92, 95, 97, 100,
+     103, 105, 108, 110, 113, 115, 118, 121, 123, 126, 128, 131, 133, 136, 139, 141,
+     144, 146, 149, 151, 154, 157, 159, 162, 164, 167, 170, 172, 175, 177, 180, 182,
+     185, 188, 190, 193, 195, 198, 200, 203, 206, 208, 211, 213, 216, 218, 221, 224,
+     226, 229, 231, 234, 236, 239, 242, 244, 247, 249, 252, 255
+    };
 /*--- pins ---*/
 #define DAC_PORT PORTB
 
@@ -125,13 +144,17 @@ void parse_cmd(char * _cmd_buff);
 void show_status(void);
 
 /*--------- Globals ---------*/
+#if 0
 static uint8_t wave_value = 0; //current position in cycle
+static char is_rising = 1;
+#endif
+
 static waveType_t wave_type = WAVE_SQRE; //current generator wave type
 static uint16_t lut_pos = 0; //position in lookup table, used for sine gen
 
 static machineState_t major_state = STOP;//machine state
+static uint8_t major_state_transition = 1;
 
-static char is_rising = 1;
 uint16_t frequency = 50;
 
 char shown_status = 0;
@@ -178,16 +201,13 @@ int main(void)
     set_bit(LED_ON);
 
     while(1) {
-
-        switch(major_state) {
-
-        case STOP:
+        //do state transition actions or run steady state code
+        if(major_state_transition) {
+            switch(major_state) {
+            case STOP:
             timer1_stop();
             DAC_PORT = 0x00;
             rst_bit(LED_RUN);
-            if(cmd_recved) {
-                parse_cmd(cmd_buff); //parse incoming message
-            }
             break;
         case RUN:
             timer1_start();
@@ -218,11 +238,23 @@ int main(void)
                 rst_bit(LED_SQRE);
                 break;
             }
-            if (!shown_status) {
-                show_status();
-                shown_status = 1;
-            }
             break;
+        }
+        }
+        else {
+            switch(major_state) {
+            case STOP:
+                if(cmd_recved) {
+                    parse_cmd(cmd_buff); //parse incoming message
+                }
+                break;
+            case RUN:
+                if (!shown_status) {
+                    show_status();
+                    shown_status = 1;
+                }
+                break;
+            }
         }
     }
 }
@@ -234,6 +266,7 @@ int main(void)
 ISR(BTN_SS_vect)
 {
     major_state = major_state == RUN ? STOP : RUN;
+    major_state_transition = 1;
     //while(get_bit(BTN_SS)); //wait button release;
 }
 
@@ -256,6 +289,7 @@ ISR(BTN_WAVE_vect)
         wave_type = WAVE_SINE;
         break;
     }
+    lut_pos = 0;
 }
 
 /**
@@ -275,14 +309,30 @@ ISR(TIMER0_OVF_vect)
 */
 ISR(TIMER1_COMPA_vect)
 {
+#if DEBUG_PULSE_PIN_ISR == 1
     set_bit(DEBG_PIN);
+#endif
+
     set_2byte_reg(0x0000, TCNT1); //reset timer value
 
     switch(wave_type) {
     case WAVE_SINE:
         DAC_PORT = sine_lut[lut_pos];
-        lut_pos = lut_pos < SIN_LUT_LEN ? lut_pos + 1 : 0;
+        lut_pos = lut_pos < LUT_LEN ? lut_pos + 1 : 0;
         break;
+    case WAVE_TRGL:
+        DAC_PORT = trgl_lut[lut_pos];
+        lut_pos = lut_pos < LUT_LEN ? lut_pos + 1 : 0;
+        break;
+    case WAVE_SWTT:
+        DAC_PORT = swtt_lut[lut_pos];
+        lut_pos = lut_pos < LUT_LEN ? lut_pos + 1 : 0;
+        break;
+    case WAVE_SQRE:
+        lut_pos = lut_pos < LUT_LEN ? lut_pos + 1 : 0;
+        DAC_PORT = lut_pos < LUT_LEN/2 ? 0 : 255;
+        break;
+#if 0
     case WAVE_TRGL:
         DAC_PORT = wave_value; //TODO: FIX THIS wrong range shoulf be 0-255
         if(is_rising) {
@@ -291,7 +341,8 @@ ISR(TIMER1_COMPA_vect)
                 is_rising = 0;
             }
         } else {
-            wave_value = wave_value ? wave_value - 1 : WAVE_PTS;
+            wave_value
+                = wave_value ? wave_value - 1 : WAVE_PTS;
             if(wave_value == 0) {
                 is_rising = 1;
             }
@@ -305,8 +356,11 @@ ISR(TIMER1_COMPA_vect)
         DAC_PORT = wave_value < WAVE_PTS/2 ? 0 : 255;
         wave_value = wave_value < WAVE_PTS ? wave_value + 1 : 0;
         break;
+#endif
     }
+#if DEBUG_PULSE_PIN_ISR == 1
     rst_bit(DEBG_PIN);
+#endif
 }
 
 /**
@@ -364,6 +418,7 @@ void parse_cmd(char * _cmd_buff)
     switch(cmd) {
     case CMD_RUN:
         major_state = RUN;
+        major_state_transition = 1;
     case CMD_CFG:
         sscanf(_cmd_buff, "%*c %c %u\n", &w, &f);
         if(w && f <= 100) {
@@ -380,6 +435,7 @@ void parse_cmd(char * _cmd_buff)
         }
     case CMD_STOP:
         major_state = STOP;
+        major_state_transition = 1;
         serial_debug("stopped");
     default:
         serial_debug("invalid cmd");
