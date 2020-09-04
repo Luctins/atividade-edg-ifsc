@@ -157,6 +157,7 @@ static machineState_t major_state = RUN;//machine state
 static uint8_t major_state_transition = 1;
 
 uint16_t frequency = 50;
+uint16_t ADCread = 512;
 
 char shown_status = 0;
 
@@ -182,7 +183,9 @@ int main(void)
     EIMSK = 0x03; //enable INT1 and INT0
 
     /* configure ADC  */
-    //TODO: set up adc for frequency adjustment
+	ADMUX = 0b01000111; //Vref = pin AVCC (5V), ADC = pin ADC7
+	ADCSRA = 0b10000110; //bit0: ADC enable, bits 2..0: prescaller
+	ADCSRA |= (1 << ADSC); //starts first conversion
 
     /* configure timer 0 */
     TCCR0A = 0x00;
@@ -214,6 +217,16 @@ int main(void)
             break;
         case RUN:
             timer1_start();
+			if (ADCSRA & (1 << ADIF)){ //if converion ended
+				ADCread = ADCW; //read conversion
+				ADCread = ((ADCread * 90)/1023); //0-1023 scale -> 0-90 scale
+				ADCSRA |= (1 << ADSC); //starts next conversion
+				
+				//serial test print:
+				/*char buff[6];
+				snprintf(buff, 5, "%i", ADCread);
+				uart_send_str(buff);*/
+			}
             set_bit(LED_RUN);
             switch(wave_type) {
             case WAVE_SINE:
@@ -381,6 +394,7 @@ ISR(USART_RX_vect) //recepção serial
       cmd_recved = 1;
   }
   ++cmd_buff_pos;
+  //uart_send_char(*cmd_buff_pos); //test
 }
 
 /*--------- Function definition ---------*/
