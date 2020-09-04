@@ -157,7 +157,7 @@ static machineState_t major_state = RUN;//machine state
 static uint8_t major_state_transition = 1;
 
 uint16_t frequency = 50;
-uint16_t ADCread = 512;
+uint32_t ADCread = 512;
 
 char shown_status = 0;
 
