@@ -173,9 +173,9 @@ int main(void)
 {
     /* set up pin directions */
     DDRB = 0xff;
-    DDRC = 0x07;
+    DDRC = 0x1f;
     DDRD = 0xf0;
-
+    
     DDRC |= 0x04;//debug pin
 
     //Configure pin interrupts
@@ -331,21 +331,24 @@ ISR(TIMER1_COMPA_vect)
 #endif
 
     set_2byte_reg(0x0000, TCNT1); //reset timer value
-
+    uint8_t v = 128;
     switch(wave_type) {
     case WAVE_SINE:
-        DAC_PORT = pgm_read_byte(sine_lut+lut_pos);
+        v = pgm_read_byte(sine_lut+lut_pos);
         break;
     case WAVE_TRGL:
-        DAC_PORT = pgm_read_byte(trgl_lut+lut_pos);
+        v = pgm_read_byte(trgl_lut+lut_pos);
         break;
     case WAVE_SWTT:
-        DAC_PORT = pgm_read_byte(swtt_lut+lut_pos);
+        v = pgm_read_byte(swtt_lut+lut_pos);
         break;
     case WAVE_SQRE:
-        DAC_PORT = lut_pos < LUT_LEN/2 ? 0 : 255;
+        v = lut_pos < LUT_LEN/2 ? 0 : 255;
         break;
     }
+    DAC_PORT = v & 0x3f;
+    DDRC |= (v >> 3) & 0x20;
+    
         lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0;
 #if 0
     case WAVE_TRGL:
