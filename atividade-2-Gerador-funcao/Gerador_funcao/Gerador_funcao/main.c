@@ -58,35 +58,36 @@ const char const * line_termination = "\r\n";
 #define LUT_LEN (WAVE_PTS)
 #define MAX_F (100)
 /**
-   100 Point LUT's for all minimally complex curves
+   100 Point LUT's for all curves except the square wave
 */
-PROGMEM static const uint8_t sine_lut[LUT_LEN] =
+static const uint8_t sine_lut[LUT_LEN] PROGMEM =
     {
-     127, 135, 143, 151, 159, 167, 174, 182, 189, 196, 203, 209, 215, 221, 226, 231,
-     235, 239, 243, 246, 249, 251, 253, 254, 254, 254, 254, 253, 252, 250, 247, 245,
-     241, 237, 233, 228, 223, 218, 212, 206, 199, 192, 185, 178, 171, 163, 155, 147,
-     139, 131, 123, 115, 107, 99, 91, 83, 76, 69, 62, 55, 48, 42, 36, 31, 26, 21,
-     17, 13, 9, 7, 4, 2, 1, 0, 0, 0, 0, 1, 3, 5, 8, 11, 15, 19, 23, 28, 33, 39, 45,
-     51, 58, 65, 72, 80, 87, 95, 103, 111, 119, 127
+     127, 135, 143, 151, 159, 166, 174, 181, 188, 195, 202, 208, 214, 220, 225, 230,
+     235, 239, 242, 246, 248, 250, 252, 253, 254, 255, 254, 253, 252, 250, 248, 246,
+     242, 239, 235, 230, 225, 220, 214, 208, 202, 195, 188, 181, 174, 166, 159, 151,
+     143, 135, 127, 119, 111, 103, 95, 88, 80, 73, 66, 59, 52, 46, 40, 34, 29, 24,
+     19, 15, 12, 8, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 8, 12, 15, 19, 24, 29, 34, 40,
+     46, 52, 59, 66, 73, 80, 88, 95, 103, 111, 119
     };
-PROGMEM static const uint8_t trgl_lut[LUT_LEN] = 
+static const uint8_t trgl_lut[LUT_LEN] PROGMEM =
     {
-     0, 5, 10, 15, 20, 25, 30, 36, 41, 46, 51, 56, 61, 66, 72, 77, 82, 87, 92, 97,
-     103, 108, 113, 118, 123, 128, 133, 139, 144, 149, 154, 159, 164, 170, 175, 180,
-     185, 190, 195, 200, 206, 211, 216, 221, 226, 231, 236, 242, 247, 252, 2, 7, 12,
-     18, 23, 28, 33, 38, 43, 48, 54, 59, 64, 69, 74, 79, 84, 90, 95, 100, 105, 110,
-     115, 121, 126, 131, 136, 141, 146, 151, 157, 162, 167, 172, 177, 182, 188, 193,
-     198, 203, 208, 213, 218, 224, 229, 234, 239, 244, 249, 255
+     0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 51, 56, 61, 66, 71, 76, 81, 86, 91, 96,
+     102, 107, 112, 117, 122, 127, 132, 137, 142, 147, 153, 158, 163, 168, 173, 178,
+     183, 188, 193, 198, 204, 209, 214, 219, 224, 229, 234, 239, 244, 249, 255, 249,
+     244, 239, 234, 229, 224, 219, 214, 209, 204, 198, 193, 188, 183, 178, 173, 168,
+     163, 158, 153, 147, 142, 137, 132, 127, 122, 117, 112, 107, 101, 96, 91, 86,
+     81, 76, 71, 66, 61, 56, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5
     };
-PROGMEM static const uint8_t swtt_lut[LUT_LEN] = 
+static const uint8_t swtt_lut[LUT_LEN] PROGMEM =
     {
-     0, 2, 5, 7, 10, 12, 15, 18, 20, 23, 25, 28, 30, 33, 36, 38, 41, 43, 46, 48, 51,
-     54, 56, 59, 61, 64, 66, 69, 72, 74, 77, 79, 82, 85, 87, 90, 92, 95, 97, 100,
-     103, 105, 108, 110, 113, 115, 118, 121, 123, 126, 128, 131, 133, 136, 139, 141,
-     144, 146, 149, 151, 154, 157, 159, 162, 164, 167, 170, 172, 175, 177, 180, 182,
-     185, 188, 190, 193, 195, 198, 200, 203, 206, 208, 211, 213, 216, 218, 221, 224,
-     226, 229, 231, 234, 236, 239, 242, 244, 247, 249, 252, 255
+     0, 2, 5, 7, 10, 12, 15, 17, 20, 22, 25, 28, 30, 33, 35, 38, 40, 43, 45, 48, 51,
+     53, 56, 58, 61, 63, 66, 68, 71, 73, 76, 79, 81, 84, 86, 89, 91, 94, 96, 99, 102,
+     104, 107, 109, 112, 114, 117, 119, 122, 124, 127, 130, 132, 135, 137, 140,
+     142, 145, 147, 150, 153, 155, 158, 160, 163, 165, 168, 170, 173, 175, 178, 181,
+     183, 186, 188, 191, 193, 196, 198, 201, 204, 206, 209, 211, 214, 216, 219, 221,
+     224, 226, 229, 232, 234, 237, 239, 242, 244, 247, 249, 252
     };
+
 /*--- pins ---*/
 #define DAC_PORT PORTB
 
@@ -149,10 +150,10 @@ static uint8_t wave_value = 0; //current position in cycle
 static char is_rising = 1;
 #endif
 
-static waveType_t wave_type = WAVE_SQRE; //current generator wave type
+static waveType_t wave_type = WAVE_SWTT; //current generator wave type
 static uint16_t lut_pos = 0; //position in lookup table, used for sine gen
 
-static machineState_t major_state = STOP;//machine state
+static machineState_t major_state = RUN;//machine state
 static uint8_t major_state_transition = 1;
 
 uint16_t frequency = 50;
@@ -165,6 +166,7 @@ uint8_t cmd_recved = 0;
 
 char cmd_buff[CMD_BUFF_LEN];
 char * cmd_buff_pos=cmd_buff;
+
 /*--------- Main ---------*/
 int main(void)
 {
@@ -184,7 +186,8 @@ int main(void)
 
     /* configure timer 0 */
     TCCR0A = 0x00;
-    TIMSK0 = 0x01;//enable isr for timer 0 ovf 
+    TCCR0B = 0x02;
+    TIMSK0 = 0x01; //enable isr for timer 0 ovf 
 
     /*configure timer 1 */
     TCCR1A = 0b00000000; //timer in normal mode,
@@ -298,7 +301,7 @@ ISR(BTN_WAVE_vect)
 */
 ISR(TIMER0_OVF_vect)
 {
-    if(t0_cnt++ > 10) {
+    if(t0_cnt++ >= 10) {
         t0_cnt = 0;
         shown_status = 0;
     }
@@ -306,6 +309,7 @@ ISR(TIMER0_OVF_vect)
 
 /**
   Update output waveform.
+  DONT TOUCH THIS, every change alters the timing of the rest of the program
 */
 ISR(TIMER1_COMPA_vect)
 {
@@ -317,21 +321,19 @@ ISR(TIMER1_COMPA_vect)
 
     switch(wave_type) {
     case WAVE_SINE:
-        DAC_PORT = sine_lut[lut_pos];
-        lut_pos = lut_pos < LUT_LEN ? lut_pos + 1 : 0;
+        DAC_PORT = pgm_read_byte(sine_lut+lut_pos);
         break;
     case WAVE_TRGL:
-        DAC_PORT = trgl_lut[lut_pos];
-        lut_pos = lut_pos < LUT_LEN ? lut_pos + 1 : 0;
+        DAC_PORT = pgm_read_byte(trgl_lut+lut_pos);
         break;
     case WAVE_SWTT:
-        DAC_PORT = swtt_lut[lut_pos];
-        lut_pos = lut_pos < LUT_LEN ? lut_pos + 1 : 0;
+        DAC_PORT = pgm_read_byte(swtt_lut+lut_pos);
         break;
     case WAVE_SQRE:
-        lut_pos = lut_pos < LUT_LEN ? lut_pos + 1 : 0;
         DAC_PORT = lut_pos < LUT_LEN/2 ? 0 : 255;
         break;
+    }
+        lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0;
 #if 0
     case WAVE_TRGL:
         DAC_PORT = wave_value; //TODO: FIX THIS wrong range shoulf be 0-255
@@ -357,7 +359,6 @@ ISR(TIMER1_COMPA_vect)
         wave_value = wave_value < WAVE_PTS ? wave_value + 1 : 0;
         break;
 #endif
-    }
 #if DEBUG_PULSE_PIN_ISR == 1
     rst_bit(DEBG_PIN);
 #endif
@@ -388,7 +389,7 @@ void timer1_set_period_us(uint16_t t_us)
 {
     //test for greatest period that fits in OCreg
     t_us = t_us > (65536/2) ? (65536/2) : t_us;
-    uint16_t OCval = t_us;
+    uint16_t OCval = t_us-1;
     //set output compare high and low byte
     set_2byte_reg(OCval, OCR1A);
     //OCR1AH = (OCVal >> 8);
@@ -449,42 +450,15 @@ void parse_cmd(char * _cmd_buff)
 
 void show_status(void)
 {
+    set_bit(DEBG_PIN);
     const uint8_t bufflen = 150;
     char buff[bufflen];
-
-    const char * wave_art[] =
-        {
-            "|  _\r\n"
-            "| /  \\\r\n"
-            "-/----\\---/->\r\n"
-            "|      \\_/\r\n",
-            "| __\r\n"
-            "||  |\r\n"
-            "-|--|--|->\r\n"
-            "|   |__|\r\n",
-            "|\r\n"
-            "| /|  /|\r\n"
-            "-/-|-/-|->\r\n"
-            "|  |/\r\n",
-            "|\r\n"
-            "| /\\\r\n"
-            "-/--\\--/->\r\n"
-            "|    \\/\r\n",
-        };
     snprintf(buff, bufflen,
              "-----------\r\n"
              "status: %c wavef: %c freq: %03i\r\n"
-             "%s"
              "-----------\r\n",
-             major_state == RUN ? 'r' : 's', wave_type, frequency,
-             (wave_type == WAVE_SINE ? wave_art[0] :
-              (wave_type == WAVE_SQRE ? wave_art[1] :
-               (wave_type == WAVE_SWTT ? wave_art[2] :
-                (wave_art[3])))));
+             major_state == RUN ? 'r' : 's', wave_type, frequency);
     serial_debug(buff);
-    for (uint8_t i = strnlen(buff,bufflen-2) + 2; i; --i) {
-        uart_send_char(127); //send ascii del
-    };
 }
 /*--------- UART ---------*/
 void uart_send_str(const char * buff)
@@ -515,15 +489,3 @@ void uart_init(uint32_t baudrate)
 }
 
 /*--------- EOF ---------*/
-
-
-#if 0
-void USART_Transmit_string( char *data ) //transmite um dado (uma string) pela serial (do professor)
-{
-    while(*data != '\0')
-    {
-		
-		
-    }
-}
-#endif
