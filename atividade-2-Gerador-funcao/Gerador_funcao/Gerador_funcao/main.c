@@ -257,6 +257,7 @@ int main(void)
             case STOP:
                 if(cmd_recved) {
                     parse_cmd(cmd_buff); //parse incoming message
+                    cmd_recved = 0;
                 }
                 break;
             case RUN:
@@ -383,10 +384,10 @@ ISR(USART_RX_vect) //recepção serial
         cmd_buff_pos = cmd_buff; //discard input
         return;
     }
-    *(cmd_buff+1) = 0;
+    *(cmd_buff_pos+1) = 0;
     //test for end of command
     if(*cmd_buff_pos == '\r') {
-        *(cmd_buff_pos+1) = 0; //null terminate string
+        //*(cmd_buff_pos+1) = 0; //null terminate string
         cmd_recved = 1;
     }
     ++cmd_buff_pos;
@@ -401,9 +402,9 @@ ISR(USART_RX_vect) //recepção serial
 void show_status(void)
 {
     //delete previous text
-    for(uint8_t i = last_len; i; --i) {
+    for(uint8_t i = last_len-1; i; --i) {
         //send ascii DEL
-        uart_send_char(0x7f);
+        uart_send_char(0x08);
     }
     const uint8_t bufflen = 150;
     char buff[bufflen];
@@ -423,18 +424,18 @@ void show_status(void)
 void parse_cmd(char * _cmd_buff)
 {
     const char help_str[] =
-        "-------------------------------------------------------\n"
-        "h - help\n"
-        "r - run generator (plase configure first)\n"
-        "s - stop generator\n"
-        "c - configure generator - format: c <waveType> <freq>\n"
-        "\t wavetypes :\n"
-        "\t  - s - [s]ine\n"
-        "\t  - q - s[q]uare\n"
-        "\t  - w - sa[w]tooth\n"
-        "\t  - t - [t]triangle\n"
-        "\t frequency: 10-100 Hz, integer"
-        "-------------------------------------------------------\n";
+        "-------------------------------------------------------\r"
+        "h - help\r"
+        "r - run generator (plase configure first)\r"
+        "s - stop generator\r"
+        "c - configure generator - format: c <waveType> <freq>\r"
+        "\t wavetypes:\r"
+        "\t  - s - [s]ine\r"
+        "\t  - q - s[q]uare\r"
+        "\t  - w - sa[w]tooth\r"
+        "\t  - t - [t]triangle\r"
+        "\t frequency: 10-100 Hz, integer\r"
+        "-------------------------------------------------------\r";
 
     cmd_t cmd = _cmd_buff[0];
     char w = 0;
@@ -489,6 +490,7 @@ void timer1_set_period_us(uint16_t t_us)
     OCR1AH = (OCval >> 8);
     OCR1AL = (OCval & 0xff);
 }
+
 
 
 /*--------- UART ---------*/
