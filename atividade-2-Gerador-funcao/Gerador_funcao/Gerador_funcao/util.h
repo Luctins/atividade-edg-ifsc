@@ -55,7 +55,7 @@
 
 /*--------- Register Macros ---------*/
 
-#define set_reg(reg, mask, value) reg = ((reg & mask) | value)
+#define set_reg(reg, mask, value) reg = ((reg) | (value & mask))
 //#define set_mask(reg, mask, offset)	(reg |= (mask << offset))
 //#define clr_mask(reg, mask, offset)	(reg &= ~(mask << offset)) /*!< '~' is Bitwise not */
 
