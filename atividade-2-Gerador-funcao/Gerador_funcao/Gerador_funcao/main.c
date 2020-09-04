@@ -159,7 +159,6 @@ static uint8_t major_state_transition = 1;
 static waveType_t wave_type = WAVE_SWTT; //current generator wave type
 uint16_t frequency = 100; //
 uint16_t ADCread = 512;
-
 /*--- Counters ---*/
 static uint8_t t0_cnt = 0; //timer0 interrupt counter 
 static uint16_t lut_pos = 0; //position in lookup table, used for sine gen
