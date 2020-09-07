@@ -59,7 +59,7 @@
 
 /*--------- Constants ---------*/
 #define CMD_BUFF_LEN 50
-#define BAUD_RATE (9600)
+#define BAUD_RATE (38400)
 #define WAVE_PTS (100)
 #define LUT_LEN (WAVE_PTS)
 #define MAX_F (100)
@@ -163,8 +163,8 @@ void show_status(void);
 static machineState_t major_state = RUN; //machine state
 static uint8_t major_state_transition = 1;
 
-static waveType_t wave_type = WAVE_SQRE; //current generator wave type
-uint16_t frequency = 100; //
+static waveType_t wave_type = WAVE_TRGL; //current generator wave type
+uint16_t frequency = 10; //
 uint16_t ADCread = 512;
 
 /*--- Counters ---*/
@@ -179,7 +179,7 @@ volatile uint8_t cmd_recved = 0;
 char cmd_buff[CMD_BUFF_LEN];
 char * cmd_buff_pos=cmd_buff;
 
-uint8_t last_len = 0;
+uint8_t last_len = 4;
 
 /*--------- Main ---------*/
 int main(void)
@@ -200,11 +200,6 @@ int main(void)
     //enable interrupts
     __asm__("sei;");
     
-#if 1
-    while(1) {
-        ;
-    }
-#else
     //Configure pin interrupts
     EICRA = 0x00; //set both INT0 and INT1 as falling edge
     EIMSK = 0x03; //enable INT1 and INT0
@@ -298,7 +293,6 @@ int main(void)
             cmd_recved = 0;
         }
     }
-#endif
 }
 
 /*--------- Interrupts ---------*/
@@ -355,8 +349,11 @@ ISR(TIMER1_COMPA_vect)
         break;
     }
     #endif
-    DAC_HN = (DAC_HN & 0xf0) | (v >> 4);
-    DAC_LN = (DAC_LN & 0xf0) | (v & 0x0f);
+    uint8_t vh, vl;
+    vh = (DAC_HN & 0xf0) | (v >> 4);
+    vl = (DAC_LN & 0xf0) | (v & 0x0f);
+    DAC_HN = vh;
+    DAC_LN = vl;
     lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0;
 
 #if DEBUG_PULSE_PIN_ISR == 1
@@ -439,11 +436,13 @@ ISR(USART_RX_vect) //recepção serial
 */
 void show_status(void)
 {
+    #if 0
     //delete previous text
-    for(uint8_t i = last_len-1; i; --i) {
+    for(uint8_t i = last_len-4; i; --i) {
         //send ascii DEL
         uart_send_char(0x08);
     }
+    #endif
     const uint8_t bufflen = 150;
     char buff[bufflen];
     snprintf(buff, bufflen,
@@ -477,12 +476,14 @@ void parse_cmd(char * _cmd_buff)
         "-------------------------------------------------------\r";
 
     cmd_t cmd = _cmd_buff[0];
+    cmd_buff_pos = cmd_buff;
     char w = 0;
     uint16_t f = 9999;
     switch(cmd) {
     case CMD_RUN:
         major_state = RUN;
         major_state_transition = 1;
+        break;
     case CMD_CFG:
         sscanf(_cmd_buff, "%*c %c %u\n", &w, &f);
         if(w && f <= 100) {
@@ -493,39 +494,41 @@ void parse_cmd(char * _cmd_buff)
             /*
               The timer frequency is 100 * f, because of 100 samples per cycle
             */
-            timer1_set_period_us(1000/f);
+            timer1_set_period_us(10000/f);
             serial_debug("ok");
         } else {
             serial_debug("invalid arg");
         }
+        break;
     case CMD_STOP:
         major_state = STOP;
         major_state_transition = 1;
         serial_debug("stopped");
+        break;
     default:
         serial_debug("invalid cmd");
     case CMD_HLP:
         serial_debug(help_str);
-
         //set_bit(LED_ERR);
         break;
     }
+    *cmd_buff_pos = 0;//reset cmd buffer
 }
 
 
 /*--- Timer1 ---*/
 void timer1_set_period_us(uint16_t t_us)
 {
-    const uint8_t tmr1_ofs = 4;
+    const uint8_t tmr1_ofs = 6;
     const uint16_t maxt_us = 65535 >> 1; // divide by 2
     //test for greatest period that fits in OCreg
     t_us = t_us > (maxt_us) ? (maxt_us) :
-        (t_us <= tmr1_ofs ? tmr1_ofs + 1 : t_us); 
+        (t_us*2 <= tmr1_ofs ? tmr1_ofs*2 + 1 : t_us); 
     /**
        for a prescaler of 8 and clock of 16000000UL, every period is = 0.5 us
        so the compare value is 2*t_us
     */
-    uint16_t OCval = t_us*2 - tmr1_ofs;
+    uint16_t OCval = (t_us*2) - tmr1_ofs;
     //set_2byte_reg(OCval, OCR1A); //set output compare high and low byte
     OCR1AH = (OCval >> 8);
     OCR1AL = (OCval & 0xff);
