@@ -45,6 +45,13 @@
 
 /*--------- Macros ---------*/
 #define DEBUG_PULSE_PIN_ISR 1
+#define USE_PROGMEM 1
+
+#if USE_PROGMEM == 1
+#define TAB_ALLOC PROGMEM
+#else
+#define TAB_ALLOC
+#endif
 
 #define set_2byte_reg(val, reg) reg ## H = (val >> 8); reg ## L = (val & 0xff);
 
@@ -59,7 +66,7 @@
 /**
    100 Point LUT's for all curves except the square.
 */
-static const uint8_t sine_lut[LUT_LEN] PROGMEM =
+static const uint8_t sine_lut[LUT_LEN] TAB_ALLOC =
 {
     127, 135, 143, 151, 159, 166, 174, 181, 188, 195, 202, 208, 214, 220, 225, 230,
     235, 239, 242, 246, 248, 250, 252, 253, 254, 255, 254, 253, 252, 250, 248, 246,
@@ -68,7 +75,7 @@ static const uint8_t sine_lut[LUT_LEN] PROGMEM =
     19, 15, 12, 8, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 8, 12, 15, 19, 24, 29, 34, 40,
     46, 52, 59, 66, 73, 80, 88, 95, 103, 111, 119
 };
-static const uint8_t trgl_lut[LUT_LEN] PROGMEM =
+static const uint8_t trgl_lut[LUT_LEN] TAB_ALLOC =
 {
     0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 51, 56, 61, 66, 71, 76, 81, 86, 91, 96,
     102, 107, 112, 117, 122, 127, 132, 137, 142, 147, 153, 158, 163, 168, 173, 178,
@@ -77,7 +84,7 @@ static const uint8_t trgl_lut[LUT_LEN] PROGMEM =
     163, 158, 153, 147, 142, 137, 132, 127, 122, 117, 112, 107, 101, 96, 91, 86,
     81, 76, 71, 66, 61, 56, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5
 };
-static const uint8_t swtt_lut[LUT_LEN] PROGMEM =
+static const uint8_t swtt_lut[LUT_LEN] TAB_ALLOC =
 {
     0, 2, 5, 7, 10, 12, 15, 17, 20, 22, 25, 28, 30, 33, 35, 38, 40, 43, 45, 48, 51,
     53, 56, 58, 61, 63, 66, 68, 71, 73, 76, 79, 81, 84, 86, 89, 91, 94, 96, 99, 102,
@@ -153,19 +160,20 @@ void show_status(void);
 /*--------- Globals ---------*/
 
 /*--- states ---*/
-static machineState_t major_state = RUN;//machine state
+static machineState_t major_state = RUN; //machine state
 static uint8_t major_state_transition = 1;
 
-static waveType_t wave_type = WAVE_SWTT; //current generator wave type
+static waveType_t wave_type = WAVE_SQRE; //current generator wave type
 uint16_t frequency = 100; //
 uint16_t ADCread = 512;
+
 /*--- Counters ---*/
-static uint8_t t0_cnt = 0; //timer0 interrupt counter 
-static uint16_t lut_pos = 0; //position in lookup table, used for sine gen
+volatile uint8_t t0_cnt = 0; //timer0 interrupt counter 
+volatile uint16_t lut_pos = 0; //position in lookup table, used for sine gen
 
 /*--- Flags ---*/
-uint8_t shown_status = 0;
-uint8_t cmd_recved = 0;
+volatile uint8_t shown_status = 0;
+volatile uint8_t cmd_recved = 0;
 
 /*--- buffers ---*/
 char cmd_buff[CMD_BUFF_LEN];
@@ -177,35 +185,42 @@ uint8_t last_len = 0;
 int main(void)
 {
     /* set up pin directions */
-    DDRB = 0x3f;
-    DDRC = 0x1f;
+    DDRB = 0xff;
+    DDRC = 0xff;
     DDRD = 0xf0;
     
+    /*configure timer 1 */
+    TCNT1H = 0;
+    TCNT1L = 0;
+
+    TCCR1A = 0x00; //timer in normal mode,
+    TCCR1B = 0x02; //presc = 8
+    TIMSK1 = 0x02; //enable Interrupt for OC1A
+    timer1_set_period_us(10000/frequency);
+    //enable interrupts
+    __asm__("sei;");
+    
+#if 1
+    while(1) {
+        ;
+    }
+#else
     //Configure pin interrupts
     EICRA = 0x00; //set both INT0 and INT1 as falling edge
     EIMSK = 0x03; //enable INT1 and INT0
 
-    /* configure ADC  */
-    ADMUX = 0b01000111; //Vref = pin AVCC (5V), ADC = pin ADC7
-    ADCSRA = 0b10000110; //bit0: ADC enable, bits 2..0: prescaller
-    ADCSRA |= (1 << ADSC); //starts first conversion
+    //initialize uart
+    uart_init(BAUD_RATE);
 
     /* configure timer 0 */
     TCCR0A = 0x00;
     TCCR0B = 0x04; //presc = 256
     TIMSK0 = 0x01; //enable isr for timer 0 ovf 
 
-    /*configure timer 1 */
-    TCCR1A = 0x00; //timer in normal mode,
-    TCCR1B = 0x08; //presc = 8
-    TIMSK1 = 0x00; //enable Interrupt for OC1A
-    timer1_set_period_us(1000/frequency);
-
-    uart_init(BAUD_RATE);
-
-    //enable interrupts
-    __asm__("sei;");
-
+    /* configure ADC  */
+    ADMUX = 0b01000111; //Vref = pin AVCC (5V), ADC = pin ADC7
+    ADCSRA = 0b10000110; //bit0: ADC enable, bits 2..0: prescaller
+    ADCSRA |= (1 << ADSC); //starts first conversion
     uart_send_str("hello there!\r\n");
     set_bit(LED_ON);
 
@@ -255,16 +270,9 @@ int main(void)
         else {
             switch(major_state) {
             case STOP:
-                if(cmd_recved) {
-                    parse_cmd(cmd_buff); //parse incoming message
-                    cmd_recved = 0;
-                }
+                //wait
                 break;
             case RUN:
-                if (shown_status == 0) {
-                    show_status();
-                    shown_status = 1;
-                }
 #if 0 //TODO:Integrate ADC reading code into freq adjustment
                 if (ADCSRA & (1 << ADIF)){ //if converion ended
                     ADCread = ADCW; //read conversion
@@ -280,7 +288,17 @@ int main(void)
                 break;
             }
         }
+        //Show status line
+        if (shown_status == 0) {
+            show_status();
+            shown_status = 1;
+        }
+        if(cmd_recved) {
+            parse_cmd(cmd_buff); //parse incoming message
+            cmd_recved = 0;
+        }
     }
+#endif
 }
 
 /*--------- Interrupts ---------*/
@@ -289,7 +307,7 @@ int main(void)
 */
 ISR(TIMER1_COMPA_vect)
 {
-    static int8_t v;
+    volatile uint8_t v;
 
 #if DEBUG_PULSE_PIN_ISR == 1
     set_bit(DEBG_PIN);
@@ -300,6 +318,7 @@ ISR(TIMER1_COMPA_vect)
       read wave value from ROM (progam memory), and set port output
       (except for square wave).
     */
+    #if USE_PROGMEM == 1
     switch(wave_type) {
     case WAVE_SINE:
         v = pgm_read_byte(sine_lut+lut_pos);
@@ -311,14 +330,33 @@ ISR(TIMER1_COMPA_vect)
         v = pgm_read_byte(swtt_lut+lut_pos);
         break;
     case WAVE_SQRE:
-        v = lut_pos < LUT_LEN/2 ? 0 : 255;
+        v = lut_pos < (LUT_LEN>>1) ? 0 : 255;
         break;
     default:
         v = 128;
         break;
     }
-    set_reg(DAC_HN, DAC_HN_MASK, v>>4);
-    set_reg(DAC_LN, DAC_LN_MASK, v&0x0f);
+    #else
+    switch(wave_type) {
+    case WAVE_SINE:
+        v = sine_lut[lut_pos];
+        break;
+    case WAVE_TRGL:
+        v = trgl_lut[lut_pos];
+        break;
+    case WAVE_SWTT:
+        v = swtt_lut[lut_pos];
+        break;
+    case WAVE_SQRE:
+        v = lut_pos < (LUT_LEN>>1) ? 0 : 255;
+        break;
+    default:
+        v = 128;
+        break;
+    }
+    #endif
+    DAC_HN = (DAC_HN & 0xf0) | (v >> 4);
+    DAC_LN = (DAC_LN & 0xf0) | (v & 0x0f);
     lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0;
 
 #if DEBUG_PULSE_PIN_ISR == 1
@@ -424,6 +462,7 @@ void show_status(void)
 void parse_cmd(char * _cmd_buff)
 {
     const char help_str[] =
+
         "-------------------------------------------------------\r"
         "h - help\r"
         "r - run generator (plase configure first)\r"
@@ -474,24 +513,25 @@ void parse_cmd(char * _cmd_buff)
 }
 
 
-/*------------- --------- DONE ---------- ---------------- */
-
 /*--- Timer1 ---*/
 void timer1_set_period_us(uint16_t t_us)
 {
+    const uint8_t tmr1_ofs = 4;
     const uint16_t maxt_us = 65535 >> 1; // divide by 2
-    t_us = t_us > (maxt_us) ? (maxt_us) : t_us; //test for greatest period that fits in OCreg
+    //test for greatest period that fits in OCreg
+    t_us = t_us > (maxt_us) ? (maxt_us) :
+        (t_us <= tmr1_ofs ? tmr1_ofs + 1 : t_us); 
     /**
        for a prescaler of 8 and clock of 16000000UL, every period is = 0.5 us
        so the compare value is 2*t_us
     */
-    uint16_t OCval = t_us*2;
+    uint16_t OCval = t_us*2 - tmr1_ofs;
     //set_2byte_reg(OCval, OCR1A); //set output compare high and low byte
     OCR1AH = (OCval >> 8);
     OCR1AL = (OCval & 0xff);
 }
 
-
+/*------------- --------- DONE ---------- ---------------- */
 
 /*--------- UART ---------*/
 void uart_send_str(const char * buff)
