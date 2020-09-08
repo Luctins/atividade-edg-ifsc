@@ -152,7 +152,8 @@ void uart_send_str(const char * buff);
 
 /*------ Others ------*/
 void parse_cmd(char * _cmd_buff);
-void show_status(void);
+uint8_t show_status(void);
+void delete_text(uint8_t len);
 
 /*--------- Globals ---------*/
 
@@ -165,7 +166,7 @@ uint16_t frequency = 10;
 uint16_t last_ADCread = 512;
 
 /*------ Counters ------*/
-volatile uint8_t t0_cnt = 0; //timer0 interrupt counter 
+volatile uint8_t t0_cnt = 0; //timer0 interrupt counter
 volatile uint16_t lut_pos = 0; //position in lookup table, used for sine gen
 
 /*------ Flags ------*/
@@ -176,7 +177,7 @@ volatile uint8_t cmd_recved = 0;
 char cmd_buff[CMD_BUFF_LEN];
 char * cmd_buff_pos=cmd_buff;
 
-uint8_t last_len = 4;
+uint8_t last_status_len = 0;
 
 /*--------- Main ---------*/
 int main(void)
@@ -185,7 +186,7 @@ int main(void)
     DDRB = 0xff;
     DDRC = 0xff;
     DDRD = 0xf0;
-    
+
     /* Configure timer 1 */
     TCCR1A = 0x00; // Timer in normal mode,
     TCCR1B = 0x02; // Presc = 8
@@ -193,7 +194,7 @@ int main(void)
     timer1_set_period_us(10000/frequency);
     // Enable interrupts
     __asm__("sei;");
-    
+
     // Configure pin interrupts
     EICRA = 0x00; // Set both INT0 and INT1 as falling edge
     EIMSK = 0x03; // Enable INT1 and INT0
@@ -267,18 +268,19 @@ int main(void)
                 if (ADCSRA & (1 << ADIF)) {
                     uint32_t tmp = ADCW; // Read conversion
                     if (tmp != last_ADCread) { // If the value changed since last read
-                        frequency = 10 + (((tmp * 90))/1023); // 0-1023 scale -> 10-100 scale 
+                        frequency = 10 + (((tmp * 90))/1023); // 0-1023 scale -> 10-100 scale
                         last_ADCread = tmp & 0xffff;
                         timer1_set_period_us(10000/frequency);
                     }
-                    ADCSRA |= (1 << ADSC); // Starts next conversion     
+                    ADCSRA |= (1 << ADSC); // Starts next conversion
                 }
                 break;
             }
         }
         // Show status line
         if (shown_status == 0) {
-            show_status();
+            delete_text(last_status_len);
+            last_status_len = show_status() - 1;
             shown_status = 1;
         }
         if(cmd_recved) {
@@ -306,7 +308,7 @@ ISR(TIMER1_COMPA_vect)
       Read wave value from ROM (progam memory), and set port output
       (except for square wave).
     */
-    #if USE_PROGMEM == 1
+#if USE_PROGMEM == 1
     switch(wave_type) {
     case WAVE_SINE:
         v = pgm_read_byte(sine_lut+lut_pos);
@@ -324,7 +326,7 @@ ISR(TIMER1_COMPA_vect)
         v = 128;
         break;
     }
-    #else // Uses RAM
+#else // Uses RAM
     switch(wave_type) {
     case WAVE_SINE:
         v = sine_lut[lut_pos];
@@ -342,12 +344,12 @@ ISR(TIMER1_COMPA_vect)
         v = 128;
         break;
     }
-    #endif
+#endif
 
     DAC_PORT = v;
-	
+
 	// Increment LUT position ans tests if it should go back to 0
-    lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0; 
+    lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0;
 
 #if DEBUG_PULSE_PIN_ISR == 1
     rst_bit(DEBG_PIN);
@@ -405,7 +407,7 @@ ISR(BTN_WAVE_vect)
 ISR(USART_RX_vect) // Serial recieve
 {
     *cmd_buff_pos = UDR0; // Save incoming char to buffer;
-    
+
     // Test buffer boundary
     if (cmd_buff_pos + 1 >= (cmd_buff+CMD_BUFF_LEN)) {
 
@@ -413,8 +415,9 @@ ISR(USART_RX_vect) // Serial recieve
         return;
     }
     *(cmd_buff_pos+1) = 0; // Null terminate string
+    shown_status = 0; //flag to refresh status
     // Test for end of command
-    if(*cmd_buff_pos == '\r') { 
+    if(*cmd_buff_pos == '\r') {
         cmd_recved = 1;
     }
     ++cmd_buff_pos;
@@ -422,29 +425,32 @@ ISR(USART_RX_vect) // Serial recieve
 
 /*--------- Function definition  ---------*/
 /*---------   User interaction   ---------*/
+/**
+  delete text.
+*/
+void delete_text(uint8_t len)
+{
+    // Delete previous text
+    for(uint8_t i = len; i; --i) {
+        uart_send_char(0x08); // Send Backspace
+    }
+}
 
 /**
    Show running status line.
 */
-void show_status(void)
+uint8_t show_status(void)
 {
-    #if 0
-    // Delete previous text
-    for(uint8_t i = last_len-4; i; --i) {
-        // Send ascii DEL
-        uart_send_char(0x08);
-    }
-    #endif
     const uint8_t bufflen = 150;
     char buff[bufflen];
     snprintf(buff, bufflen,
              "-----------\r"
-             "status: %c wavef: %c freq: %03i\r"
+             "status: %c wavef: %c freq: %03iHz\r"
              "cmd: %s\r"
              "-----------\r",
              major_state == RUN ? 'r' : 's', wave_type, frequency, cmd_buff);
-    last_len = strnlen(buff,bufflen);
     uart_send_str(buff);
+    return strnlen(buff, bufflen);
 }
 
 /**
@@ -463,7 +469,7 @@ void parse_cmd(char * _cmd_buff)
         "\t  - s - [s]ine\r"
         "\t  - q - s[q]uare\r"
         "\t  - w - sa[w]tooth\r"
-        "\t  - t - [t]triangle\r"
+        "\t  - t - [t]riangle\r"
         "\t frequency: 10-100 Hz, integer\r"
         "-------------------------------------------------------\r";
 
@@ -501,7 +507,8 @@ void parse_cmd(char * _cmd_buff)
     default:
         serial_debug("invalid cmd");
     case CMD_HLP:
-        serial_debug(help_str);
+        uart_send_str(help_str);
+        last_status_len = 0; //No status line to delete
         break;
     }
     *cmd_buff_pos = 0; // Reset cmd buffer
@@ -515,7 +522,7 @@ void timer1_set_period_us(uint16_t t_us)
     const uint16_t maxt_us = 0xffff; // Divide by 2
     // Test for greatest period that fits in OCreg
     t_us = t_us > (maxt_us) ? (maxt_us) :
-        (t_us <= tmr1_ofs ? tmr1_ofs + 1 : t_us); 
+        (t_us <= tmr1_ofs ? tmr1_ofs + 1 : t_us);
     /**
        For a prescaler of 8 and clock of 16000000UL, every period is = 0.5 us
        so the compare value is 2*t_us
