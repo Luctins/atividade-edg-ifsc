@@ -44,7 +44,7 @@
 #include "util.h"
 
 /*--------- Macros ---------*/
-#define DEBUG_PULSE_PIN_ISR 1
+#define DEBUG_PULSE_PIN_ISR 0
 #define USE_PROGMEM 1
 
 #if USE_PROGMEM == 1
@@ -164,7 +164,7 @@ static machineState_t major_state = RUN; //machine state
 static uint8_t major_state_transition = 1;
 
 static waveType_t wave_type = WAVE_TRGL; //current generator wave type
-uint16_t frequency = 10; //
+uint16_t frequency = 10;
 uint16_t ADCread = 512;
 
 /*--- Counters ---*/
@@ -298,6 +298,7 @@ int main(void)
 /*--------- Interrupts ---------*/
 /**
    Update output waveform.
+   PLEASE DO NOT ALTER, as it alters the timing of the waveform generation
 */
 ISR(TIMER1_COMPA_vect)
 {
@@ -349,12 +350,30 @@ ISR(TIMER1_COMPA_vect)
         break;
     }
     #endif
-    uint8_t vh, vl;
+    static uint8_t vh, vl;
     vh = (DAC_HN & 0xf0) | (v >> 4);
     vl = (DAC_LN & 0xf0) | (v & 0x0f);
+
+    __asm__ volatile("cli;");
     DAC_HN = vh;
     DAC_LN = vl;
-    lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0;
+    __asm__ volatile("sei;");
+
+#if 0
+    /*
+      This is written in assembler, as it is timing sensitive
+    */
+                     "out %[dac_hn], r16; \n\t"
+                     "out %[dac_ln], r17; \n\t"
+                     "sei; \n\t"
+                     ::
+                      [vh] "e" (&vh), [vl] "e" (&vl),
+                      [dac_hn] "I" _SFR_IO_ADDR(DAC_HN),
+                      [dac_ln] "I" _SFR_IO_ADDR(DAC_LN)
+                     : "r16", "r17");
+#endif
+
+lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0;
 
 #if DEBUG_PULSE_PIN_ISR == 1
     rst_bit(DEBG_PIN);
