@@ -280,7 +280,7 @@ int main(void)
         // Show status line
         if (shown_status == 0) {
             delete_text(last_status_len);
-            last_status_len = show_status() - 1;
+            last_status_len = show_status();
             shown_status = 1;
         }
         if(cmd_recved) {
