@@ -94,9 +94,9 @@ static const uint8_t swtt_lut[LUT_LEN] TAB_ALLOC =
     224, 226, 229, 232, 234, 237, 239, 242, 244, 247, 249, 252
 };
 
-/*--- pins ---*/
+/*--- Pins ---*/
 /*
-  Since we'll be using the Whole PORTB, the processor needs to use the internal
+  Since we'll be using the whole PORTB, the processor needs to use the internal
   oscillator so we can free the XTAL pins on PORTB.
  */
 #define DAC_PORT PORTB
@@ -107,8 +107,8 @@ static const uint8_t swtt_lut[LUT_LEN] TAB_ALLOC =
 /*--- Buttons ---*/
 #define BTN_SS_vect   INT1_vect
 #define BTN_WAVE_vect INT0_vect
-#define BTN_SS   PIND,3 //start stop btn
-#define BTN_WAVE PIND,2 //toggle wave type button
+#define BTN_SS   PIND,3 // Start stop btn
+#define BTN_WAVE PIND,2 // Toggle wave type button
 
 #define LED_RUN  PORTC,1
 #define LED_ON   PORTC,0
@@ -117,9 +117,9 @@ static const uint8_t swtt_lut[LUT_LEN] TAB_ALLOC =
 #define LED_SQRE PORTD,5
 #define LED_SWTT PORTD,4
 
-/*--------- predeclaration ---------*/
+/*--------- Predeclaration ---------*/
 
-/*--- Types ------*/
+/*------ Types ------*/
 typedef enum machineState {
     STOP = 0,
     RUN,
@@ -135,28 +135,28 @@ typedef enum cmd {
 typedef enum waveType {
     WAVE_SINE = 's', /*!< Sine wave */
     WAVE_SQRE = 'q', /*!< Square wave */
-    WAVE_SWTT = 'w', /*!< sawtooth */
-    WAVE_TRGL = 't'  /*!< triangle */
+    WAVE_SWTT = 'w', /*!< Sawtooth */
+    WAVE_TRGL = 't'  /*!< Triangle */
 } waveType_t;
 
-/*--- Functions ---*/
-/*--- Timer 1 ---*/
+/*------ Functions ------*/
+/*------  Timer 1  ------*/
 void timer1_set_period_us(uint16_t t_us);
 inline void timer1_stop(void)  { TIMSK1 = 0x00; }
 inline void timer1_start(void) { TIMSK1 = 0x02; }
 
-/*--- UART ---*/
+/*------ UART ------*/
 void uart_init(uint32_t baudrate);
 void uart_send_char(const char c);
 void uart_send_str(const char * buff);
 
-/*--- Others ---*/
+/*------ Others ------*/
 void parse_cmd(char * _cmd_buff);
 void show_status(void);
 
 /*--------- Globals ---------*/
 
-/*--- states ---*/
+/*------ States ------*/
 static machineState_t major_state = RUN; //machine state
 static uint8_t major_state_transition = 1;
 
@@ -164,15 +164,15 @@ static waveType_t wave_type = WAVE_SQRE; //current generator wave type
 uint16_t frequency = 10;
 uint16_t last_ADCread = 512;
 
-/*--- Counters ---*/
+/*------ Counters ------*/
 volatile uint8_t t0_cnt = 0; //timer0 interrupt counter 
 volatile uint16_t lut_pos = 0; //position in lookup table, used for sine gen
 
-/*--- Flags ---*/
+/*------ Flags ------*/
 volatile uint8_t shown_status = 0;
 volatile uint8_t cmd_recved = 0;
 
-/*--- buffers ---*/
+/*------ Buffers ------*/
 char cmd_buff[CMD_BUFF_LEN];
 char * cmd_buff_pos=cmd_buff;
 
@@ -181,47 +181,47 @@ uint8_t last_len = 4;
 /*--------- Main ---------*/
 int main(void)
 {
-    /* set up pin directions */
+    /* Set up pin directions */
     DDRB = 0xff;
     DDRC = 0xff;
     DDRD = 0xf0;
     
-    /*configure timer 1 */
-    TCCR1A = 0x00; //timer in normal mode,
-    TCCR1B = 0x02; //presc = 8
-    TIMSK1 = 0x02; //enable Interrupt for OC1A
+    /* Configure timer 1 */
+    TCCR1A = 0x00; // Timer in normal mode,
+    TCCR1B = 0x02; // Presc = 8
+    TIMSK1 = 0x02; // Enable Interrupt for OC1A
     timer1_set_period_us(10000/frequency);
-    //enable interrupts
+    // Enable interrupts
     __asm__("sei;");
     
-    //Configure pin interrupts
-    EICRA = 0x00; //set both INT0 and INT1 as falling edge
-    EIMSK = 0x03; //enable INT1 and INT0
+    // Configure pin interrupts
+    EICRA = 0x00; // Set both INT0 and INT1 as falling edge
+    EIMSK = 0x03; // Enable INT1 and INT0
 
-    //initialize uart
+    // Initialize uart
     uart_init(BAUD_RATE);
 
-    /* configure timer 0 */
+    /* Configure timer 0 */
     TCCR0A = 0x00;
-    TCCR0B = 0x04; //presc = 256
+    TCCR0B = 0x04; // Presc = 256
     TIMSK0 = 0x01;
 
-    /* configure ADC  */
-    ADMUX = 0b01000111; //Vref = pin AVCC (5V), ADC = pin ADC7
-    ADCSRA = 0b10000110; //bit0: ADC enable, bits 2..0: prescaller
-    ADCSRA |= (1 << ADSC); //starts first conversion
+    /* Configure ADC  */
+    ADMUX = 0b01000111; // Vref = pin AVCC (5V), ADC = pin ADC7
+    ADCSRA = 0b10000110; // Bit0: ADC enable, bits 2..0: prescaller
+    ADCSRA |= (1 << ADSC); // Starts first conversion
 
 
     uart_send_str("hello there!\r\n");
     set_bit(LED_ON);
 
     while(1) {
-        //do state transition actions or run steady state code
+        // Do state transition actions or run steady state code
         if(major_state_transition) {
             switch(major_state) {
             case STOP:
                 timer1_stop();
-                DAC_PORT = 127;
+                DAC_PORT = 127; // Sets output to 0
                 rst_bit(LED_RUN);
                 break;
             case RUN:
@@ -255,34 +255,34 @@ int main(void)
                 }
                 break;
             }
-            major_state_transition = 0; //clear flag
+            major_state_transition = 0; // Clear flag
         }
         else {
             switch(major_state) {
             case STOP:
-                //wait
+                // Wait
                 break;
             case RUN:
-                //if conversion ended
+                // If conversion ended
                 if (ADCSRA & (1 << ADIF)) {
-                    uint32_t tmp = ADCW; //read conversion
-                    if (tmp != last_ADCread) {
-                        frequency = 10 + (((tmp * 90))/1023); //0-1023 scale -> 0-90 scale
+                    uint32_t tmp = ADCW; // Read conversion
+                    if (tmp != last_ADCread) { // If the value changed since last read
+                        frequency = 10 + (((tmp * 90))/1023); // 0-1023 scale -> 10-100 scale 
                         last_ADCread = tmp & 0xffff;
                         timer1_set_period_us(10000/frequency);
                     }
-                    ADCSRA |= (1 << ADSC); //starts next conversion     
+                    ADCSRA |= (1 << ADSC); // Starts next conversion     
                 }
                 break;
             }
         }
-        //Show status line
+        // Show status line
         if (shown_status == 0) {
             show_status();
             shown_status = 1;
         }
         if(cmd_recved) {
-            parse_cmd(cmd_buff); //parse incoming message
+            parse_cmd(cmd_buff); // Parse incoming message
             cmd_recved = 0;
         }
     }
@@ -301,9 +301,9 @@ ISR(TIMER1_COMPA_vect)
     set_bit(DEBG_PIN);
 #endif
 
-    set_2byte_reg(0x0000, TCNT1); //reset timer value
+    set_2byte_reg(0x0000, TCNT1); // Reset timer value
     /*
-      read wave value from ROM (progam memory), and set port output
+      Read wave value from ROM (progam memory), and set port output
       (except for square wave).
     */
     #if USE_PROGMEM == 1
@@ -324,7 +324,7 @@ ISR(TIMER1_COMPA_vect)
         v = 128;
         break;
     }
-    #else
+    #else // Uses RAM
     switch(wave_type) {
     case WAVE_SINE:
         v = sine_lut[lut_pos];
@@ -345,12 +345,9 @@ ISR(TIMER1_COMPA_vect)
     #endif
 
     DAC_PORT = v;
-    /*
-    static uint8_t vh, vl;
-    vh = (DAC_HN & 0xf0) | (v >> 4);
-    vl = (DAC_LN & 0xf0) | (v & 0x0f);
-    */
-    lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0;
+	
+	// Increment LUT position ans tests if it should go back to 0
+    lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0; 
 
 #if DEBUG_PULSE_PIN_ISR == 1
     rst_bit(DEBG_PIN);
@@ -358,8 +355,8 @@ ISR(TIMER1_COMPA_vect)
 }
 
 /**
-   used to periodically (~100 ms) show a status line on the uart. (only sets a
-   flag to show later)
+   Used to periodically (~100 ms) show a status line on the uart. (only sets a
+   flag to show later
 */
 ISR(TIMER0_OVF_vect)
 {
@@ -371,13 +368,13 @@ ISR(TIMER0_OVF_vect)
 }
 
 /**
-   start/stop button interrupt.
+   Start/stop button interrupt.
 */
 ISR(BTN_SS_vect)
 {
     major_state = major_state == RUN ? STOP : RUN;
     major_state_transition = 1;
-    //while(get_bit(BTN_SS)); //wait button release;
+    //while(get_bit(BTN_SS)); // Wait button release;
 }
 
 /**
@@ -403,29 +400,28 @@ ISR(BTN_WAVE_vect)
 }
 
 /**
-   handle serial data.
+   Handle serial data.
 */
-ISR(USART_RX_vect) //recepção serial
+ISR(USART_RX_vect) // Serial recieve
 {
-    *cmd_buff_pos = UDR0; //save incoming char to buffer;
+    *cmd_buff_pos = UDR0; // Save incoming char to buffer;
     
-    //test buffer boundary
+    // Test buffer boundary
     if (cmd_buff_pos + 1 >= (cmd_buff+CMD_BUFF_LEN)) {
 
-        cmd_buff_pos = cmd_buff; //discard input
+        cmd_buff_pos = cmd_buff; // Discard input
         return;
     }
-    *(cmd_buff_pos+1) = 0;
-    //test for end of command
-    if(*cmd_buff_pos == '\r') {
-        //*(cmd_buff_pos+1) = 0; //null terminate string
+    *(cmd_buff_pos+1) = 0; // Null terminate string
+    // Test for end of command
+    if(*cmd_buff_pos == '\r') { 
         cmd_recved = 1;
     }
     ++cmd_buff_pos;
 }
 
-/*--------- Function definition ---------*/
-/*--------- User interaction ---*/
+/*--------- Function definition  ---------*/
+/*---------   User interaction   ---------*/
 
 /**
    Show running status line.
@@ -433,19 +429,19 @@ ISR(USART_RX_vect) //recepção serial
 void show_status(void)
 {
     #if 0
-    //delete previous text
+    // Delete previous text
     for(uint8_t i = last_len-4; i; --i) {
-        //send ascii DEL
+        // Send ascii DEL
         uart_send_char(0x08);
     }
     #endif
     const uint8_t bufflen = 150;
     char buff[bufflen];
     snprintf(buff, bufflen,
-             "-----------\r\n"
-             "status: %c wavef: %c freq: %03i\r\n"
-             "cmd: %s\r\n"
-             "-----------\r\n",
+             "-----------\r"
+             "status: %c wavef: %c freq: %03i\r"
+             "cmd: %s\r"
+             "-----------\r",
              major_state == RUN ? 'r' : 's', wave_type, frequency, cmd_buff);
     last_len = strnlen(buff,bufflen);
     uart_send_str(buff);
@@ -481,14 +477,15 @@ void parse_cmd(char * _cmd_buff)
         major_state_transition = 1;
         break;
     case CMD_CFG:
+	    // Reads text input to variables w & f
         sscanf(_cmd_buff, "%*c %c %u\n", &w, &f);
-        if(w && f <= 100) {
-            f = f < 10 ? 10 : f;
-            //f = f - (f%10); //get closest power of ten
+        if(w && (f <= 100) ) {
+            f = f < 10 ? 10 : f; // Sets f to 10 if f < 10, leaves otherwise
+            //f = f - (f%10); // Get closest power of ten
             wave_type = w;
             frequency = f;
             /*
-              The timer frequency is 100 * f, because of 100 samples per cycle
+              The timer frequency is 100 (Hz * 100 samples/sec) / f
             */
             timer1_set_period_us(10000/f);
             serial_debug("ok");
@@ -505,37 +502,32 @@ void parse_cmd(char * _cmd_buff)
         serial_debug("invalid cmd");
     case CMD_HLP:
         serial_debug(help_str);
-        //set_bit(LED_ERR);
         break;
     }
-    *cmd_buff_pos = 0;//reset cmd buffer
+    *cmd_buff_pos = 0; // Reset cmd buffer
 }
 
 
-/*--- Timer1 ---*/
+/*------ Timer1 ------*/
 void timer1_set_period_us(uint16_t t_us)
 {
-    const uint8_t tmr1_ofs = 5; //adjusted by hand from the ISR exec time
-    const uint16_t maxt_us = 0xffff; // divide by 2
-    //test for greatest period that fits in OCreg
+    const uint8_t tmr1_ofs = 5; // Adjusted by hand from the ISR exec time
+    const uint16_t maxt_us = 0xffff; // Divide by 2
+    // Test for greatest period that fits in OCreg
     t_us = t_us > (maxt_us) ? (maxt_us) :
         (t_us <= tmr1_ofs ? tmr1_ofs + 1 : t_us); 
     /**
-       for a prescaler of 8 and clock of 16000000UL, every period is = 0.5 us
+       For a prescaler of 8 and clock of 16000000UL, every period is = 0.5 us
        so the compare value is 2*t_us
     */
     uint16_t OCval = (t_us) - tmr1_ofs;
-    //set_2byte_reg(OCval, OCR1A); //set output compare high and low byte
-    OCR1AH = (OCval >> 8);
-    OCR1AL = (OCval & 0xff);
+    set_2byte_reg(OCval, OCR1A); // Set output compare high and low byte
 }
-
-/*------------- --------- DONE ---------- ---------------- */
 
 /*--------- UART ---------*/
 void uart_send_str(const char * buff)
 {
-    //increment pointer until found null byte
+    // Increment pointer until found null byte
     for(;*buff;++buff)
     {
         uart_send_char(*buff);
@@ -544,18 +536,17 @@ void uart_send_str(const char * buff)
 
 void uart_send_char(const char c)
 {
-		/* Wait for empty transmit buffer */
+    /* Wait for empty transmit buffer */
     while (!(UCSR0A & (1<<UDRE0)));
-		UDR0 = c;
+        UDR0 = c;
 }
 
 void uart_init(uint32_t baudrate)
 {
     // Configure uart
-    UCSR0B = (1 << TXEN0)|(1 << RXEN0); //Enable serial
-    UCSR0B |= (1 << RXCIE0); //Enable serial reception on interruption
-    UCSR0C = (1 << UCSZ00) | (1 << UCSZ01); //8bits per frame
-    //set_2byte_reg(((F_CPU / (16UL * baudrate) ) - 1), UBRR0);//set baudrate prescaler
+    UCSR0B = (1 << TXEN0)|(1 << RXEN0); // Enable serial
+    UCSR0B |= (1 << RXCIE0); // Enable serial reception on interruption
+    UCSR0C = (1 << UCSZ00) | (1 << UCSZ01); // 8bits per frame
     UBRR0H = (((F_CPU / ((uint32_t)16 * baudrate) ) - 1) >> 8);
     UBRR0L = ((F_CPU / ((uint32_t)16 * baudrate) ) - 1); // Modo Normal Assíncrono;
 }
