@@ -31,7 +31,7 @@
 
 #include <avr/io.h>
 
-#define F_CPU  16000000UL
+#define F_CPU  8000000UL
 #include <util/delay.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
@@ -96,25 +96,22 @@ static const uint8_t swtt_lut[LUT_LEN] TAB_ALLOC =
 
 /*--- pins ---*/
 /*
-  since there isn't a single PORT with enought bits to use the DAC, we've split it
-  between 2 ports (as "nibbles") on the lower bits
-*/
-#define DAC_LN PORTB
-#define DAC_LN_MASK (0x0f)
-#define DAC_HN PORTC
-#define DAC_HN_MASK (0x0f)
+  Since we'll be using the Whole PORTB, the processor needs to use the internal
+  oscillator so we can free the XTAL pins on PORTB.
+ */
+#define DAC_PORT PORTB
 
 #define FREQ_ADJ_POT 7 /*DAC channel 7*/
-#define DEBG_PIN PORTC,4
+#define DEBG_PIN PORTC,2
 
 /*--- Buttons ---*/
 #define BTN_SS_vect   INT1_vect
 #define BTN_WAVE_vect INT0_vect
-#define BTN_SS PIND,3 //start stop btn
-#define BTN_WAVE  PIND,2 //toggle wave type button
+#define BTN_SS   PIND,3 //start stop btn
+#define BTN_WAVE PIND,2 //toggle wave type button
 
-#define LED_RUN PORTB,4
-#define LED_ON  PORTB,5
+#define LED_RUN  PORTC,1
+#define LED_ON   PORTC,0
 #define LED_SINE PORTD,7
 #define LED_TRGL PORTD,6
 #define LED_SQRE PORTD,5
@@ -163,9 +160,9 @@ void show_status(void);
 static machineState_t major_state = RUN; //machine state
 static uint8_t major_state_transition = 1;
 
-static waveType_t wave_type = WAVE_TRGL; //current generator wave type
+static waveType_t wave_type = WAVE_SQRE; //current generator wave type
 uint16_t frequency = 10;
-uint16_t ADCread = 512;
+uint16_t last_ADCread = 512;
 
 /*--- Counters ---*/
 volatile uint8_t t0_cnt = 0; //timer0 interrupt counter 
@@ -190,9 +187,6 @@ int main(void)
     DDRD = 0xf0;
     
     /*configure timer 1 */
-    TCNT1H = 0;
-    TCNT1L = 0;
-
     TCCR1A = 0x00; //timer in normal mode,
     TCCR1B = 0x02; //presc = 8
     TIMSK1 = 0x02; //enable Interrupt for OC1A
@@ -210,12 +204,14 @@ int main(void)
     /* configure timer 0 */
     TCCR0A = 0x00;
     TCCR0B = 0x04; //presc = 256
-    TIMSK0 = 0x01; //enable isr for timer 0 ovf 
+    TIMSK0 = 0x01;
 
     /* configure ADC  */
     ADMUX = 0b01000111; //Vref = pin AVCC (5V), ADC = pin ADC7
     ADCSRA = 0b10000110; //bit0: ADC enable, bits 2..0: prescaller
     ADCSRA |= (1 << ADSC); //starts first conversion
+
+
     uart_send_str("hello there!\r\n");
     set_bit(LED_ON);
 
@@ -225,8 +221,7 @@ int main(void)
             switch(major_state) {
             case STOP:
                 timer1_stop();
-                set_reg(DAC_HN, DAC_HN_MASK, 0x7f);
-                set_reg(DAC_LN, DAC_LN_MASK, 0xff);
+                DAC_PORT = 127;
                 rst_bit(LED_RUN);
                 break;
             case RUN:
@@ -268,18 +263,16 @@ int main(void)
                 //wait
                 break;
             case RUN:
-#if 0 //TODO:Integrate ADC reading code into freq adjustment
-                if (ADCSRA & (1 << ADIF)){ //if converion ended
-                    ADCread = ADCW; //read conversion
-                    ADCread = ((ADCread * 90)/1023); //0-1023 scale -> 0-90 scale
-                    ADCSRA |= (1 << ADSC); //starts next conversion
-				
-                    //serial test print:
-                    /*char buff[6];
-                      snprintf(buff, 5, "%i", ADCread);
-                      uart_send_str(buff);*/
+                //if conversion ended
+                if (ADCSRA & (1 << ADIF)) {
+                    uint32_t tmp = ADCW; //read conversion
+                    if (tmp != last_ADCread) {
+                        frequency = 10 + (((tmp * 90))/1023); //0-1023 scale -> 0-90 scale
+                        last_ADCread = tmp & 0xffff;
+                        timer1_set_period_us(10000/frequency);
+                    }
+                    ADCSRA |= (1 << ADSC); //starts next conversion     
                 }
-#endif
                 break;
             }
         }
@@ -350,30 +343,14 @@ ISR(TIMER1_COMPA_vect)
         break;
     }
     #endif
+
+    DAC_PORT = v;
+    /*
     static uint8_t vh, vl;
     vh = (DAC_HN & 0xf0) | (v >> 4);
     vl = (DAC_LN & 0xf0) | (v & 0x0f);
-
-    __asm__ volatile("cli;");
-    DAC_HN = vh;
-    DAC_LN = vl;
-    __asm__ volatile("sei;");
-
-#if 0
-    /*
-      This is written in assembler, as it is timing sensitive
     */
-                     "out %[dac_hn], r16; \n\t"
-                     "out %[dac_ln], r17; \n\t"
-                     "sei; \n\t"
-                     ::
-                      [vh] "e" (&vh), [vl] "e" (&vl),
-                      [dac_hn] "I" _SFR_IO_ADDR(DAC_HN),
-                      [dac_ln] "I" _SFR_IO_ADDR(DAC_LN)
-                     : "r16", "r17");
-#endif
-
-lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0;
+    lut_pos = lut_pos < LUT_LEN - 1 ? lut_pos + 1 : 0;
 
 #if DEBUG_PULSE_PIN_ISR == 1
     rst_bit(DEBG_PIN);
@@ -507,7 +484,7 @@ void parse_cmd(char * _cmd_buff)
         sscanf(_cmd_buff, "%*c %c %u\n", &w, &f);
         if(w && f <= 100) {
             f = f < 10 ? 10 : f;
-            f = f - (f%10); //get closest power of ten
+            //f = f - (f%10); //get closest power of ten
             wave_type = w;
             frequency = f;
             /*
@@ -538,16 +515,16 @@ void parse_cmd(char * _cmd_buff)
 /*--- Timer1 ---*/
 void timer1_set_period_us(uint16_t t_us)
 {
-    const uint8_t tmr1_ofs = 6;
-    const uint16_t maxt_us = 65535 >> 1; // divide by 2
+    const uint8_t tmr1_ofs = 5; //adjusted by hand from the ISR exec time
+    const uint16_t maxt_us = 0xffff; // divide by 2
     //test for greatest period that fits in OCreg
     t_us = t_us > (maxt_us) ? (maxt_us) :
-        (t_us*2 <= tmr1_ofs ? tmr1_ofs*2 + 1 : t_us); 
+        (t_us <= tmr1_ofs ? tmr1_ofs + 1 : t_us); 
     /**
        for a prescaler of 8 and clock of 16000000UL, every period is = 0.5 us
        so the compare value is 2*t_us
     */
-    uint16_t OCval = (t_us*2) - tmr1_ofs;
+    uint16_t OCval = (t_us) - tmr1_ofs;
     //set_2byte_reg(OCval, OCR1A); //set output compare high and low byte
     OCR1AH = (OCval >> 8);
     OCR1AL = (OCval & 0xff);
