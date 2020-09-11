@@ -101,7 +101,7 @@ static const uint8_t swtt_lut[LUT_LEN] TAB_ALLOC =
  */
 #define DAC_PORT PORTB
 
-#define FREQ_ADJ_POT 7 /*DAC channel 7*/
+#define FREQ_ADJ_POT 7 /* DAC channel 7 */
 #define DEBG_PIN PORTC,2
 
 /*--- Buttons ---*/
@@ -158,16 +158,16 @@ void delete_text(uint8_t len);
 /*--------- Globals ---------*/
 
 /*------ States ------*/
-static machineState_t major_state = RUN; //machine state
+static machineState_t major_state = STOP; // Machine state
 static uint8_t major_state_transition = 1;
 
-static waveType_t wave_type = WAVE_SQRE; //current generator wave type
+static waveType_t wave_type = WAVE_SQRE; // Current generator wave type
 uint16_t frequency = 10;
 uint16_t last_ADCread = 512;
 
 /*------ Counters ------*/
-volatile uint8_t t0_cnt = 0; //timer0 interrupt counter
-volatile uint16_t lut_pos = 0; //position in lookup table, used for sine gen
+volatile uint8_t t0_cnt = 0; // Timer0 interrupt counter
+volatile uint16_t lut_pos = 0; // Position in lookup table, used for sine gen
 
 /*------ Flags ------*/
 volatile uint8_t shown_status = 0;
