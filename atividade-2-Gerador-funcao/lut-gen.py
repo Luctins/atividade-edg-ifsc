@@ -26,11 +26,11 @@ for i in range(0,lut_len):
 	if(i == lut_len - 1):
 		fmt = " {v}"
 
-	#print("*"*int(f*sig_ampl))
-	
+	print("*"*int((1-f)*80))
+
 	sin_lut += fmt.format(v=int((0.5+0.5*m.sin(2*m.pi*f))*sig_ampl))
 	triang_lut += fmt.format(v = int(sig_ampl*(f*2) if f < 0.5 else sig_ampl*((1-f)*2)))
-	sawtooth_lut += fmt.format(v = int(f*sig_ampl))
+	sawtooth_lut += fmt.format(v = int((1-f)*sig_ampl))
 
 	sin_lut = break_str(sin_lut);
 	triang_lut = break_str(triang_lut);
