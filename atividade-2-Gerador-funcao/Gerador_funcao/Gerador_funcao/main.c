@@ -415,7 +415,7 @@ ISR(USART_RX_vect) // Serial recieve
         return;
     }
     *(cmd_buff_pos+1) = 0; // Null terminate string
-    shown_status = 0; //flag to refresh status
+    shown_status = 0; // Flag to refresh status
     // Test for end of command
     if(*cmd_buff_pos == '\r') {
         cmd_recved = 1;
